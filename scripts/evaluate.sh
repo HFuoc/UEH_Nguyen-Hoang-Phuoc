@@ -28,7 +28,7 @@ def clock(m):
 n.create_subscription(Clock,'/clock',clock,qos_profile_sensor_data)
 def odom(m):
     p=m.pose.pose.position
-    if last_position[0] is None or ((p.x-last_position[0][0])**2+(p.y-last_position[0][1])**2)**.5>.02:
+    if last_position[0] is None or (abs(m.twist.twist.linear.x)>.005 and ((p.x-last_position[0][0])**2+(p.y-last_position[0][1])**2)**.5>.02):
         last_position[0]=(p.x,p.y)
         last_progress[0]=elapsed[0]
 n.create_subscription(Odometry,'/odom',odom,qos_profile_sensor_data)

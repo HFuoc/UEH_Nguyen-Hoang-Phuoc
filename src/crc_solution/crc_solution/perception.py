@@ -191,7 +191,7 @@ class Perception:
 
 
 def corridor_range(ranges, angle_min, angle_increment, range_min, range_max,
-                   half_width=.19, lidar_offset=-.064):
+                   half_width=.17, lidar_offset=-.064):
     """Nearest return in the swept body corridor, using LaserScan geometry."""
     values = np.asarray(ranges, dtype=float)
     if values.size == 0 or not math.isfinite(angle_increment) or angle_increment == 0:
@@ -207,5 +207,8 @@ def corridor_range(ranges, angle_min, angle_increment, range_min, range_max,
     y = np.full(values.shape, math.inf)
     x[valid] = values[valid]*np.cos(angles[valid])+lidar_offset
     y[valid] = values[valid]*np.sin(angles[valid])
-    inside = valid & (x > 0) & (np.abs(y) < half_width)
+    # Rays intersecting the robot's own footprint are common during pitching
+    # on the ramp. The stock body ends behind x=0.10 m in base_footprint.
+    # Check the corridor ahead of the nose, not lateral points beside wheels.
+    inside = valid & (x > .10) & (np.abs(y) < half_width)
     return float(np.min(x[inside])) if np.any(inside) else math.inf

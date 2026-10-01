@@ -55,14 +55,14 @@ if y < 610:
         else:
             p.draw_line((x-3,z-5),end,color=(.1,.25,.35));p.draw_line((x+3,z-5),end,color=(.1,.25,.35))
 page('Lane perception and steering',[
-    'White lane markings are selected using brightness, low saturation and local contrast. Multiple horizontal image bands provide candidates. Pairs are checked against projected lane width; a single visible boundary gives lower confidence.',
+    'White lane markings are selected using brightness, low saturation and local contrast. Multiple horizontal image bands provide candidates. Pairs are checked against projected lane width; a single visible boundary gives lower confidence. A small consensus fit rejects isolated candidates from crossing marks. A broad bright ramp surface can supply its visible right edge when paint is occluded.',
     'The stock camera intrinsics and mounting height project pixels onto a locally flat ground plane. A line fit estimates lateral offset and heading. Consistency across bands determines confidence. The inferred target is in the robot frame, not a world coordinate.',
     'The angular command is linear speed multiplied by a curvature estimate toward the look-ahead target. Positive target offset is left of the robot, giving positive angular velocity. Speed falls with curvature and lower confidence.',
     'Brief missing markings reuse the most recent lane estimate with an odometry yaw correction. This prediction is bounded in time. A longer perception loss stops motion. Ground projection is approximate on a ramp; this is a known failure mode.'])
 page('Traffic and obstacle behaviour',[
     'STOP candidates use red colour and a compact polygonal shape. Warning triangles are rejected. Several distinct frames are required. Approximate apparent sign size triggers the stop approach. The hold timer starts when measured wheel-odometry speed is almost zero and runs for at least two simulation seconds.',
     'Traffic lights require a coloured compact region and a dark vertical housing. Temporal confirmation reduces single-frame errors. Red and yellow cause stopping before a junction. A short odometry-based crossing interval permits clearing a junction already entered on green.',
-    'LiDAR rays are transformed using the scan angle origin and increment. Returns in the projected body corridor cause stopping. Invalid front-sector data is not interpreted as free space. Clearance must persist before motion resumes.',
+    'LiDAR rays are transformed using the scan angle origin and increment. Returns ahead of the nose in the projected body corridor cause stopping. Returns inside the stock body footprint are excluded because pitching on the ramp can expose the wheels to the scanner. Invalid front-sector data is not interpreted as free space. Clearance must persist before motion resumes.',
     'Safety stopping has priority over forward progress. The driver does not recognize every sign type and does not overtake. These limitations must remain visible in the participant explanation.'])
 page('Environment and reproducibility',[
     'The supplied environment uses ROS 2 Humble and Gazebo Classic 11 in Docker. The host in this session is Windows with an existing Ubuntu 20.04 VMware guest, configured for 8 GB RAM and 8 virtual CPUs.',

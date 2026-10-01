@@ -82,6 +82,14 @@ class SafetyTests(unittest.TestCase):
         self.assertTrue(math.isnan(corridor_range([math.nan]*360,0,math.pi/180,.12,3.5)))
         self.assertEqual(corridor_range([math.inf]*360,0,math.pi/180,.12,3.5),math.inf)
 
+    def test_ramp_self_returns_do_not_block_forward_corridor(self):
+        rays=[math.inf]*360
+        rays[66]=.1609
+        rays[298]=.1453
+        self.assertEqual(corridor_range(rays,0,math.pi/180,.12,3.5),math.inf)
+        rays[0]=.23
+        self.assertLess(corridor_range(rays,0,math.pi/180,.12,3.5),.30)
+
     def test_rejects_unsafe_settings(self):
         for kwargs in ({'stop_hold':1.9},{'max_speed':math.nan},{'max_speed':-.1}):
             with self.assertRaises(ValueError):

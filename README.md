@@ -52,7 +52,7 @@ The launcher does not start/reset Gazebo, spawn entities, or query ground truth.
 
 The only motion publisher is `/crc_driver`. A wall-clock watchdog stops motion when sensor delivery or the simulation clock stops. STOP holding uses simulation time and measured stationary speed. The controller never reads track coordinates or the official world/model/config files.
 
-Lane boundaries are projected onto a locally flat ground plane using stock camera calibration. The controller follows the inferred lane centre with a curvature command and reduces speed for uncertainty and turns. Brief missing markings use the last observation adjusted by odometry yaw; sustained loss stops the robot.
+Lane boundaries are projected onto a locally flat ground plane using stock camera calibration. A consensus fit rejects isolated crossing marks. A broad bright ramp may supply a visible side boundary when it covers the painted lane. The controller follows the inferred lane centre with a curvature command and reduces speed for uncertainty and turns. Brief missing markings use the last observation adjusted by odometry yaw; sustained loss stops the robot.
 
 Traffic controls use colour/shape and confirmation over multiple images. Light candidates need a dark housing. This lightweight detector is imperfect; inspect annotated evidence rather than assuming all signs are recognized. Only STOP has an implemented sign-specific action. Crossing stripes prompt slower approach; LiDAR governs obstruction stopping. No unvalidated lane change is attempted.
 
@@ -77,7 +77,7 @@ python analysis/summarize.py results
 python analysis/build_report.py
 ```
 
-Analysis tools run on the host and need NumPy, matplotlib and PyMuPDF (`python -m pip install numpy matplotlib pymupdf`). Runtime does not need matplotlib or PyMuPDF. `analysis/generated/` holds figures and summaries. Camera-estimated lateral RMS is **not** the official lane RMS. Wheel odometry distance is **not** completed route distance. No official competition score is estimated.
+Analysis tools run on the host and need NumPy, matplotlib and PyMuPDF (`python -m pip install numpy matplotlib pymupdf`). Runtime does not need matplotlib or PyMuPDF. `analysis/generated/` holds figures and summaries. A compact completed-run data set is retained under `analysis/evidence/`; pass the selected batch directory there to `summarize.py` to reproduce the report. Camera-estimated lateral RMS is **not** the official lane RMS. Wheel odometry distance is **not** completed route distance. No official competition score is estimated.
 
 For live rule checking, run `ros2 node info /crc_driver` and inspect subscriptions; only robot sensors and `/clock` are expected. Official simulator nodes themselves necessarily use Gazebo services; the submitted solution must not.
 

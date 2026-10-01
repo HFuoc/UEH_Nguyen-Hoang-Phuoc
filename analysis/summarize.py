@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 def summarize(csv_path, output):
     with csv_path.open() as stream:
         rows=list(csv.DictReader(stream))
+    rows=[row for row in rows if float(row['sim_time'])>0]
     if not rows:
         return None
     def series(name):
