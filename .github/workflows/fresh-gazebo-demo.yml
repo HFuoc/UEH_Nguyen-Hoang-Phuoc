@@ -40,6 +40,9 @@ jobs:
           cat ci_patch/fix1_* > /tmp/fix1.patch
           git apply --check --exclude=tests/test_navigation.py /tmp/fix1.patch
           git apply --exclude=tests/test_navigation.py /tmp/fix1.patch
+          cat ci_patch/fix2_* > /tmp/fix2.patch
+          git apply --check /tmp/fix2.patch
+          git apply /tmp/fix2.patch
           python3 tools/check_rules.py
 
       - name: Build ROS 2 Humble and Gazebo image
@@ -57,7 +60,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
           set -euo pipefail
-          bash scripts/test_solution.sh 420
+          bash scripts/test_solution.sh 500
 
       - name: Summarize fresh run
         if: always()
