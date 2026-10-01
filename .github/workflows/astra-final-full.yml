@@ -3,7 +3,7 @@ name: Astra Final Full Run
 on:
   push:
     branches:
-      - astra-final-20261001
+      - astra-final-overtake-20261001
   workflow_dispatch:
 
 permissions:
