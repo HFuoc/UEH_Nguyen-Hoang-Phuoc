@@ -37,6 +37,23 @@ p,y=page('System architecture',[
     'Image and calibration -> lane and sign observations\nLiDAR -> swept body corridor clearance\nOdometry -> heading, stationary speed and travelled distance\nObservations -> safety and traffic behaviour -> curvature control -> /cmd_vel',
     'A wall-clock timer executes the control loop so loss of the simulation clock still produces zero velocity. Behaviour durations use simulation time. Images are processed only when a new frame arrives; repeated control ticks do not count as fresh detections.',
     'The launch interface is ros2 launch crc_solution run.launch.py. The simulator is already running, and dependencies and workspace setup are completed before this command.'])
+if y < 610:
+    boxes=[(fitz.Rect(44,y+10,185,y+62),'Camera + calibration'),
+           (fitz.Rect(44,y+82,185,y+134),'LiDAR + odometry'),
+           (fitz.Rect(220,y+10,375,y+62),'Lane / sign perception'),
+           (fitz.Rect(220,y+82,375,y+134),'Safety + behaviour'),
+           (fitz.Rect(410,y+82,550,y+134),'/cmd_vel')]
+    for rect,label in boxes:
+        p.draw_rect(rect,color=(.1,.25,.35),fill=(.94,.97,.98))
+        p.insert_textbox(rect+fitz.Rect(5,16,-5,-5),label,fontsize=10,align=1)
+    for start,end in [((185,y+36),(220,y+36)),((298,y+62),(298,y+82)),
+                      ((185,y+108),(220,y+108)),((375,y+108),(410,y+108))]:
+        p.draw_line(start,end,color=(.1,.25,.35),width=1.2)
+        x,z=end
+        if start[1]==end[1]:
+            p.draw_line((x-5,z-3),end,color=(.1,.25,.35));p.draw_line((x-5,z+3),end,color=(.1,.25,.35))
+        else:
+            p.draw_line((x-3,z-5),end,color=(.1,.25,.35));p.draw_line((x+3,z-5),end,color=(.1,.25,.35))
 page('Lane perception and steering',[
     'White lane markings are selected using brightness, low saturation and local contrast. Multiple horizontal image bands provide candidates. Pairs are checked against projected lane width; a single visible boundary gives lower confidence.',
     'The stock camera intrinsics and mounting height project pixels onto a locally flat ground plane. A line fit estimates lateral offset and heading. Consistency across bands determines confidence. The inferred target is in the robot frame, not a world coordinate.',
@@ -52,9 +69,13 @@ page('Environment and reproducibility',[
     'The official simulator world, model and configuration files are protected by SHA-256 hashes. tools/check_rules.py verifies them and scans the submitted controller for forbidden interfaces. The Dockerfile uses HTTPS repositories to accommodate this network.',
     'Build and install instructions are in README.md. Runtime dependencies are ROS Python bindings, cv_bridge, NumPy and OpenCV. Analysis uses matplotlib and PyMuPDF on the host.',
     'Clean-environment validation must be distinguished from a fresh build in a reused container. A clean-machine claim is only justified after its corresponding check has actually run. See PROGRESS.md for the current status.'])
+validation=json.loads((GENERATED/'validation.json').read_text()) if (GENERATED/'validation.json').exists() else None
+validation_note=('Local automated checks recorded at '+validation['utc']+'. '+
+    '; '.join(c['command']+': '+('PASS' if c['exit_code']==0 else 'FAIL') for c in validation['checks'])) if validation else 'Local automated check record not yet generated.'
 page('Validation method',[
+    validation_note,
     'Unit tests cover projected lane geometry, dim lanes, blank imagery, STOP versus warning triangles, lamp housing, missing sensors, invalid LiDAR, scan angle conventions, bounded lane prediction, obstacle clearance dwell and traffic behaviour.',
-    'Simulation evaluation targets three independent runs at track_scale=1.0 with all props, signs and lights enabled, plus two valid changed start poses. Each evaluation is bounded to five simulation minutes. Different runs may have different traffic phases.',
+    'Simulation evaluation targets three independent runs at track_scale=1.0 with all props, signs and lights enabled, plus two valid changed start poses. Each evaluation is bounded to five simulation minutes and stopped early after 45 simulation seconds without progress. Different runs may have different traffic phases.',
     'CSV telemetry contains time, state, commanded and measured speed, odometry, lane confidence, estimated lane offset and detected traffic controls. Annotated frames are saved periodically and at state transitions.',
     'analysis/summarize.py produces all metric plots from the original CSVs. Estimated lane RMS is not official ground-truth lane RMS; integrated wheel distance is not the route-completion score. No collision or traffic compliance count is inferred without a verified annotation method.'])
 if runs:
@@ -67,7 +88,8 @@ else:
     page('Recorded results - pending',[
         'No real-run telemetry was available when this PDF was generated. No distance, lane RMS, success rate, collision count or competition score is claimed.',
         'Run the evaluation, export /tmp/crc_results from the container, execute analysis/summarize.py results, then regenerate this PDF with analysis/build_report.py. Do not replace missing observations with expected values.'])
-plots=sorted(GENERATED.glob('*/run.png'))
+plots=[GENERATED/Path(r['source']).parent.name/'run.png' for r in runs]
+plots=[p for p in plots if p.exists()]
 if plots:
     p,y=page('Measured run plots',['Representative plot. Source and metric definitions are included in the generated summary next to the figure.'])
     p.insert_image(fitz.Rect(40,y,555,min(y+420,770)),filename=str(plots[-1]))
@@ -75,6 +97,15 @@ else:
     page('Evidence figures - pending',[
         'The plot page is intentionally empty until measured telemetry exists. The analysis script creates an odometry trajectory, linear-speed plot, camera lane-offset plot and perception/steering plot.',
         'Images in the simulator documentation are reference material, not results of this solution. Only frames captured during this solution running may be described as experimental evidence.'])
+images=[]
+if runs:
+    best=max(runs,key=lambda r:r['distance_wheel_odom_m'])
+    images=sorted((ROOT/Path(best['source']).parent).glob('*_FOLLOW.jpg'))
+if images:
+    p,y=page('Recorded camera evidence',[
+        'Actual onboard camera frame saved by the driver. Yellow dots show inferred lane centres; coloured boxes show detections. Overlay labels are controller estimates, not independently verified annotations.',
+        str(images[-1].relative_to(ROOT))])
+    p.insert_image(fitz.Rect(44,y,550,min(y+385,780)),filename=str(images[-1]))
 page('Limitations and next experiments',[
     'Tight lane clearance amplifies calibration and boundary-selection errors. Intersections, crosswalk stripes and multiple parallel markings can create ambiguous candidates. The baseline selects visible continuity; it has no full route planner.',
     'Camera projection assumes approximately level ground. Ramp pitch and tunnel flicker can reduce confidence. A stop is safer than a blind recovery but reduces distance covered.',

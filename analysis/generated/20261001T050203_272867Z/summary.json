@@ -1,0 +1,17 @@
+{
+  "source": "results\\default_1\\crc_results\\20261001T050203_272867Z\\telemetry.csv",
+  "samples": 534,
+  "duration_sim_s": 80.6,
+  "distance_wheel_odom_m": 1.3186124453528854,
+  "lane_estimate_rms_m": 0.04932984304387739,
+  "lane_confident_sample_fraction": 0.36704119850187267,
+  "states_seen": [
+    "FOLLOW",
+    "LANE_GRACE",
+    "LANE_LOST",
+    "STOP_HOLD",
+    "WAIT_SENSORS"
+  ],
+  "official_score": null,
+  "note": "Wheel odometry path length is not route completion. Camera lane RMS is not ground-truth RMS."
+}

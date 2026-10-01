@@ -1,0 +1,23 @@
+{
+  "utc": "2026-10-01T05:16:55.761570+00:00",
+  "checks": [
+    {
+      "command": "python -m unittest discover -s tests -v",
+      "exit_code": 0,
+      "output": "test_dark_lane_and_blank (test_core.ImageTests.test_dark_lane_and_blank) ... ok\ntest_projected_lane_center_and_offset (test_core.ImageTests.test_projected_lane_center_and_offset) ... ok\ntest_real_desaturated_green_lamp (test_core.ImageTests.test_real_desaturated_green_lamp) ... ok\ntest_real_taper_frame_keeps_near_corridor (test_core.ImageTests.test_real_taper_frame_keeps_near_corridor) ... ok\ntest_real_unmarked_ramp_edge (test_core.ImageTests.test_real_unmarked_ramp_edge) ... ok\ntest_stop_plate_and_lamp (test_core.ImageTests.test_stop_plate_and_lamp) ... ok\ntest_warning_triangle_is_not_stop (test_core.ImageTests.test_warning_triangle_is_not_stop) ... ok\ntest_clock_reset_drops_old_stop_timer (test_core.SafetyTests.test_clock_reset_drops_old_stop_timer) ... ok\ntest_lidar_angle_origin (test_core.SafetyTests.test_lidar_angle_origin) ... ok\ntest_lost_lane_is_bounded (test_core.SafetyTests.test_lost_lane_is_bounded) ... ok\ntest_nan_scan_is_not_clear (test_core.SafetyTests.test_nan_scan_is_not_clear) ... ok\ntest_obstacle_requires_clear_dwell (test_core.SafetyTests.test_obstacle_requires_clear_dwell) ... ok\ntest_red_wait_and_green_release (test_core.SafetyTests.test_red_wait_and_green_release) ... ok\ntest_rejects_unsafe_settings (test_core.SafetyTests.test_rejects_unsafe_settings) ... ok\ntest_stop_requires_stationary_two_seconds (test_core.SafetyTests.test_stop_requires_stationary_two_seconds) ... ok\ntest_turn_direction_and_speed_parameter (test_core.SafetyTests.test_turn_direction_and_speed_parameter) ... ok\ntest_waits_for_all_sensors (test_core.SafetyTests.test_waits_for_all_sensors) ... ok\ntest_yellow_before_and_inside_junction (test_core.SafetyTests.test_yellow_before_and_inside_junction) ... ok\n\n----------------------------------------------------------------------\nRan 18 tests in 0.239s\n\nOK\n"
+    },
+    {
+      "command": "python tools/check_rules.py",
+      "exit_code": 0,
+      "output": "Protected files checked: 19\nStatic rules audit: PASS (also inspect the live ROS graph).\n"
+    }
+  ],
+  "sources": {
+    "src\\crc_solution\\crc_solution\\__init__.py": "30d883965817ad73aeee8a3957e3ef712eb93e37f499270b82ed7ec21b6bb01f",
+    "src\\crc_solution\\crc_solution\\control.py": "8a0379c77462668d02fb56de8e4d0920b44529d7d0031c0823d1cb4519b70269",
+    "src\\crc_solution\\crc_solution\\node.py": "b9eef75c7c09116fa690693ee89a17d7fb5cdbd9b541043edacb4a9c93f0146d",
+    "src\\crc_solution\\crc_solution\\perception.py": "013c12ee60798ae3ae400c2db3845e999738369d4b98f2c0828442937de0cdca",
+    "src\\crc_solution\\launch\\run.launch.py": "75a56c6146a1dbb8a1bf2dd9bf82bc0ba89c4fdc192c7fbe71103dbe5b47e98d",
+    "src\\crc_solution\\setup.py": "e66c8f804952a8e825c914087839b149e6b9be3a679fc2780540fcd5956bd6f6"
+  }
+}

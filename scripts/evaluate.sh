@@ -9,6 +9,7 @@ set -u
 export CRC_RUN_DURATION="$duration"
 ros2 launch crc_solution run.launch.py > /tmp/crc-driver.log 2>&1 &
 driver_pid=$!
+(sleep 4; timeout 12 ros2 node info /crc_driver > /tmp/crc-node-info.txt 2>&1) &
 trap 'kill -TERM "$driver_pid" 2>/dev/null || true; wait "$driver_pid" 2>/dev/null || true' EXIT
 python3 - <<'PY'
 import os,time

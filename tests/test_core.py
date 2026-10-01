@@ -96,6 +96,12 @@ class SafetyTests(unittest.TestCase):
 
 
 class ImageTests(unittest.TestCase):
+    def test_real_unmarked_ramp_edge(self):
+        image=cv2.imread(str(Path(__file__).parent/'data/ramp_camera.jpg'))
+        lane,_=Perception().lane(image)
+        self.assertGreater(lane.confidence,.35)
+        self.assertLess(abs(lane.target_y),.06)
+
     def test_real_desaturated_green_lamp(self):
         image=cv2.imread(str(Path(__file__).parent/'data/green_lamp_annotated.jpg'))
         signs=Perception().signs(image)

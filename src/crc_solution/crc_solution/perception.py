@@ -60,7 +60,15 @@ class Perception:
                 ((contrast > 9) | (gray > 180))).astype(np.uint8) * 255
         h, w = gray.shape
         points, weights, overlay = [], [], []
-        for fraction in [.88, .81, .74, .68, .62, .59]:
+        # The ramp is a broad bright surface that occludes the painted road.
+        # Its visible side can stand in for a lane boundary; require support
+        # across several rows so one zebra stripe is not treated as a ramp.
+        broad_rows = 0
+        for fraction in [.91,.83,.75,.67]:
+            row=int(h*fraction)
+            if any(size > .45*w for _,size in runs(np.mean(mask[row-2:row+3],axis=0)>120)):
+                broad_rows += 1
+        for fraction in [.95, .91, .87, .83, .79, .75, .71, .67, .63, .60, .58]:
             row = int(h * fraction)
             if row <= self.cy + 12:
                 continue
@@ -68,7 +76,8 @@ class Perception:
             width = self.fx * .35 / depth
             if not 25 < width < 1.5*w:
                 continue
-            peaks = [x for x, size in runs(np.mean(mask[row-2:row+3], axis=0) > 120)
+            row_runs = runs(np.mean(mask[row-2:row+3], axis=0) > 120)
+            peaks = [x for x, size in row_runs
                      if 1 <= size <= max(18, width*.13)]
             prediction = self.cx - self.last_center * self.fx / depth
             candidates = []
@@ -84,29 +93,51 @@ class Perception:
                     for center in (peak-width/2, peak+width/2):
                         if 0 <= center < w and abs(center-prediction) < .4*width:
                             candidates.append((abs(center-prediction)/width+.3, center, .45))
+            if broad_rows >= 3:
+                for middle,size in row_runs:
+                    if size < .45*w:
+                        continue
+                    right = middle+(size-1)/2
+                    center = right-width/2
+                    if middle-size/2 < self.cx < right and right < w-3 and 0 <= center < w:
+                        candidates.append((abs(center-prediction)/width+.20,center,.55))
             if not candidates:
                 continue
             score, center, weight = min(candidates)
-            if score > .85:
+            if score > 1.10:
                 continue
             lateral = -(center-self.cx)*depth/self.fx
             points.append((depth+self.offset, lateral))
             weights.append(weight)
             overlay.append((int(center), row))
         if len(points) < 2:
+            self.last_center *= .5
             return Lane(points=overlay), mask
         points_arr = np.asarray(points)
         weights_arr = np.asarray(weights)
         # Distant intersections and tapering lane edges must not overwhelm the
         # lane underneath the robot. Fit the visible near corridor first.
         near_rows = points_arr[:, 0] <= .52
-        if np.count_nonzero(near_rows) >= 2:
+        if np.count_nonzero(near_rows) >= 3:
             points_arr, weights_arr = points_arr[near_rows], weights_arr[near_rows]
+        # Remove isolated stripe/crossbar candidates with a deterministic small
+        # consensus fit. Keep the majority rather than fitting one remote mark.
+        best = None
+        for i in range(len(points_arr)):
+            for j in range(i+1, len(points_arr)):
+                if abs(points_arr[j,0]-points_arr[i,0]) < .05:
+                    continue
+                model = np.polyfit(points_arr[[i,j],0], points_arr[[i,j],1], 1)
+                keep = np.abs(np.polyval(model,points_arr[:,0])-points_arr[:,1]) < .025
+                score = float(weights_arr[keep].sum())
+                if best is None or score > best[0]: best = (score,keep)
+        if best is not None and np.count_nonzero(best[1]) >= 3:
+            points_arr, weights_arr = points_arr[best[1]], weights_arr[best[1]]
         fit = np.polyfit(points_arr[:, 0], points_arr[:, 1], 1, w=weights_arr)
         residual = np.sqrt(np.average((np.polyval(fit, points_arr[:, 0])-points_arr[:, 1])**2, weights=weights_arr))
-        confidence = min(1., sum(weights_arr)/2.) * max(0., 1.-residual/.05)
+        confidence = min(1., sum(weights_arr)/3.) * max(0., 1.-residual/.06)
         near = float(np.polyval(fit, .30))
-        self.last_center = float(np.clip(.5*self.last_center+.5*near, -.15, .15))
+        self.last_center = float(np.clip(.5*self.last_center+.5*near, -.07, .07))
         return Lane(near, math.atan(float(fit[0])), confidence,
                     float(np.polyval(fit, .45)), overlay), mask
 
