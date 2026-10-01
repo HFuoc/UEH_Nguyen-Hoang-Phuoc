@@ -1,0 +1,202 @@
+name: Astra Final Full Run
+
+on:
+  push:
+    branches:
+      - astra-final-20261001
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full-run:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply exact Astra runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat ci_overlay/chunks/* > /tmp/astra_runtime.b64
+          base64 -d /tmp/astra_runtime.b64 > /tmp/astra_runtime.tgz
+          echo "1efddc714be0ae485567e754b53b733b97cefa0f0f83d5b4fe6988d4506a57e8  /tmp/astra_runtime.tgz" | sha256sum -c -
+          tar -xzf /tmp/astra_runtime.tgz -C "$GITHUB_WORKSPACE"
+          python3 tools/check_rules.py
+
+      - name: Run unit and regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -q
+
+      - name: Build clean ROS 2 / Gazebo image
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/run_docker.sh build
+          bash scripts/run_docker.sh compile
+
+      - name: Start fresh default-track simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p final_results/crc_results
+          bash scripts/run_docker.sh down || true
+          docker rm -f crc >/dev/null 2>&1 || true
+          docker run -d --name crc --net=host --ipc=host             -e DISPLAY=:99 -e LIBGL_ALWAYS_SOFTWARE=1             -v "$PWD/src":/ws/src             -v "$PWD/scripts":/ws/scripts             -v crc_build:/ws_build             -v "$PWD/final_results/crc_results":/tmp/crc_results             crc_sim:humble             bash /ws/scripts/headless_entrypoint.sh skycam:=false
+          for i in $(seq 1 90); do
+            if docker exec crc bash -lc 'source /opt/ros/humble/setup.bash; python3 /ws/scripts/verify_sensors.py' >/tmp/sensors.log 2>&1; then
+              cat /tmp/sensors.log
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/sensors.log || true
+          docker logs crc | tail -120 || true
+          exit 1
+
+      - name: Start smooth 30 FPS evidence recorder
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/record_demo.py <<'PY'
+          import math
+          import cv2
+          import rclpy
+          from cv_bridge import CvBridge
+          from rclpy.node import Node
+          from rclpy.qos import qos_profile_sensor_data
+          from sensor_msgs.msg import Image
+          from nav_msgs.msg import Odometry
+          from rosgraph_msgs.msg import Clock
+
+          class Recorder(Node):
+              def __init__(self):
+                  super().__init__('crc_demo_recorder')
+                  self.bridge = CvBridge()
+                  self.writer = None
+                  self.prev_xy = None
+                  self.distance = 0.0
+                  self.sim_time = 0.0
+                  self.frames = 0
+                  self.create_subscription(Image, '/camera/image_raw', self.on_image, qos_profile_sensor_data)
+                  self.create_subscription(Odometry, '/odom', self.on_odom, qos_profile_sensor_data)
+                  self.create_subscription(Clock, '/clock', self.on_clock, qos_profile_sensor_data)
+
+              def on_clock(self, msg):
+                  self.sim_time = msg.clock.sec + msg.clock.nanosec * 1e-9
+
+              def on_odom(self, msg):
+                  p = msg.pose.pose.position
+                  xy = (p.x, p.y)
+                  if self.prev_xy is not None:
+                      d = math.hypot(xy[0]-self.prev_xy[0], xy[1]-self.prev_xy[1])
+                      if d < 0.5:
+                          self.distance += d
+                  self.prev_xy = xy
+
+              def on_image(self, msg):
+                  frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+                  if self.writer is None:
+                      h, w = frame.shape[:2]
+                      fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+                      self.writer = cv2.VideoWriter('/tmp/full_map_demo.avi', fourcc, 30.0, (w, h))
+                  cv2.rectangle(frame, (10, 10), (455, 72), (0, 0, 0), -1)
+                  cv2.putText(frame, 'UEH CRC 2026 - Autonomous full-route run',
+                              (22, 34), cv2.FONT_HERSHEY_SIMPLEX, .55, (255,255,255), 1, cv2.LINE_AA)
+                  cv2.putText(frame, f'Sim: {self.sim_time:6.1f}s   Odom travel: {self.distance:6.2f}m',
+                              (22, 58), cv2.FONT_HERSHEY_SIMPLEX, .50, (255,255,255), 1, cv2.LINE_AA)
+                  self.writer.write(frame)
+                  self.frames += 1
+
+              def destroy_node(self):
+                  if self.writer is not None:
+                      self.writer.release()
+                  super().destroy_node()
+
+          rclpy.init()
+          n = Recorder()
+          try:
+              rclpy.spin(n)
+          finally:
+              n.destroy_node()
+              rclpy.shutdown()
+          PY
+          docker cp /tmp/record_demo.py crc:/tmp/record_demo.py
+          docker exec -d crc bash -lc 'source /opt/ros/humble/setup.bash; source /ws_build/install/setup.bash; python3 /tmp/record_demo.py >/tmp/recorder.log 2>&1'
+          sleep 2
+
+      - name: Run from START for up to 600 simulation seconds
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          docker exec crc bash /ws/scripts/evaluate.sh 600
+          code=$?
+          set -e
+          echo "$code" > final_results/evaluate_exit_code.txt
+          docker exec crc bash -lc 'pkill -INT -f /tmp/record_demo.py || true'
+          sleep 3
+          docker cp crc:/tmp/full_map_demo.avi final_results/full_map_demo.avi 2>/dev/null || true
+          docker cp crc:/tmp/recorder.log final_results/recorder.log 2>/dev/null || true
+          docker cp crc:/tmp/crc-evaluation.json final_results/crc-evaluation.json 2>/dev/null || true
+          docker logs crc > final_results/simulator.log 2>&1 || true
+          exit "$code"
+
+      - name: Analyze full run
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          t="$(find final_results -name telemetry.csv -type f 2>/dev/null | sort | tail -1 || true)"
+          if [ -z "$t" ]; then
+            echo "NO_TELEMETRY"
+            exit 0
+          fi
+          python3 - "$t" <<'PY'
+          import csv, sys, collections, math, json
+          p=sys.argv[1]
+          rows=list(csv.DictReader(open(p,newline='',encoding='utf-8')))
+          print("TELEMETRY",p)
+          print("ROWS",len(rows))
+          if not rows:
+              raise SystemExit
+          def f(r,k,default=0.0):
+              try:return float(r.get(k,'') or default)
+              except:return default
+          print("FINAL_ROW",json.dumps(rows[-1],sort_keys=True))
+          print("MAX_DISTANCE",max(f(r,'distance_odom_m') for r in rows))
+          seq=[]
+          for r in rows:
+              s=r.get('state','')
+              if not seq or seq[-1]!=s: seq.append(s)
+          print("STATE_SEQUENCE"," -> ".join(seq))
+          print("STATE_COUNTS",dict(collections.Counter(r.get('state','') for r in rows)))
+          print("SIGNS",dict(collections.Counter(r.get('sign','') for r in rows if r.get('sign',''))))
+          print("LIGHTS",dict(collections.Counter(r.get('light','') for r in rows if r.get('light',''))))
+          print("FINAL_POSITION",f(rows[-1],'x_odom'),f(rows[-1],'y_odom'))
+          print("FINAL_SIM_TIME",f(rows[-1],'sim_time'))
+          PY
+
+      - name: Encode smooth H.264 demo
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          if [ -s final_results/full_map_demo.avi ]; then
+            ffmpeg -y -hide_banner -loglevel warning               -i final_results/full_map_demo.avi               -vf "fps=30,scale=960:-2:flags=lanczos,format=yuv420p"               -c:v libx264 -preset medium -crf 21 -movflags +faststart               final_results/full_map_demo.mp4
+            ffprobe -v error -show_entries format=duration,size -show_entries stream=width,height,r_frame_rate               -of default=noprint_wrappers=1 final_results/full_map_demo.mp4 || true
+          fi
+
+      - name: Upload full-run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astra-final-full-run
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            final_results/
