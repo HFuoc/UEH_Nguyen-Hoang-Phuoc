@@ -1,0 +1,85 @@
+cker.last
+                 self.crossing = CrossingGuard()
+                 self.people = []
+                 self.sign_actions = SignActions()
+@@ -169,9 +176,18 @@
+                 self.last_classify_time = -math.inf
+                 self.last_save = self.last_log = -math.inf
+             self.last_clock, self.clock_changed_wall = now, wall
+-        fresh = (self.freshness.fresh(now, wall, self.settings.sensor_timeout)
+-                 and wall-self.clock_changed_wall < self.settings.sensor_timeout)
+-        if self.image_sequence != self.processed_sequence and fresh and wall-self.last_process_wall >= .1:
++        # Obstacle safety depends on LiDAR + odometry, not on the graphics
++        # renderer delivering every camera frame on time.  Treating the image
++        # as a hard safety sensor caused repeated WAIT_SENSORS stops in
++        # software-rendered Gazebo.  A stale camera now expires into the
++        # bounded lane-recovery logic while scan/odom remain the hard gate.
++        clock_active = wall-self.clock_changed_wall < .9
++        safety_fresh = (clock_active and self.freshness.fresh(
++            now, wall, .9, names=('scan','odom'), receipt_timeout=1.25))
++        image_fresh = self.freshness.fresh(
++            now, wall, 1.35, names=('image',), receipt_timeout=2.0)
++        if (self.image_sequence != self.processed_sequence and image_fresh
++                and wall-self.last_process_wall >= .08):
+             self.lane, _ = self.perception.lane(self.image)
+             self.signs = self.perception.signs(self.image)
+             self.people = detect_people(self.image, self.perception)
+@@ -194,10 +210,40 @@
+             self.controller.observe(self.signs, now, self.distance)
+             self.processed_sequence = self.image_sequence
+             self.last_process_wall = wall
+-        sweep_lane = self.lane
+-        if self.lane.confidence < .35:
++        camera_lane = self.lane if image_fresh else Lane()
++        sweep_lane = camera_lane
++        if camera_lane.confidence < .35:
+             delta = self.yaw-self.controller.last_yaw
+             sweep_lane = Lane(target_y=self.controller.last_lane.target_y-.45*math.sin(delta))
++
++        self.corridor = (self.corridor_tracker.update(self.scan_points, now)
++                         if safety_fresh else self.corridor_tracker.last)
++        tunnel_assist = self.sign_actions.tunnel_active(self.distance)
++        nav_source = 'camera'
++        # In a tunnel the LiDAR walls are a second, independent estimate of
++        # the local road corridor.  Blend them when possible and prefer them
++        # when the camera is missing or contradicts a well-supported corridor.
++        if (self.corridor.confidence >= .32 and
++                (tunnel_assist or camera_lane.confidence < .35)):
++            if camera_lane.confidence < .35:
++                sweep_lane = Lane(self.corridor.lateral, self.corridor.heading,
++                                  max(.45,self.corridor.confidence),
++                                  self.corridor.target_y)
++                nav_source = 'lidar_corridor'
++            else:
++                disagreement = abs(math.atan2(
++                    math.sin(camera_lane.heading-self.corridor.heading),
++                    math.cos(camera_lane.heading-self.corridor.heading)))
++                wc = .72 if disagreement > .35 else .45
++                wc *= min(1., max(.55, self.corridor.confidence))
++                wc = min(.82, max(.25, wc))
++                sweep_lane = Lane(
++                    (1.-wc)*camera_lane.lateral + wc*self.corridor.lateral,
++                    (1.-wc)*camera_lane.heading + wc*self.corridor.heading,
++                    max(camera_lane.confidence, self.corridor.confidence),
++                    (1.-wc)*camera_lane.target_y + wc*self.corridor.target_y)
++                nav_source = 'fused_corridor'
++
+         desired_curvature = steering_curvature(sweep_lane, self.settings.steering_gain)
+         overtake = self.overtake.update(
+             now, self.sign_actions.highway, self.scan_points, sweep_lane,
+@@ -218,13 +264,13 @@
+                 self.curvature, self.front = choose_curvature(
+                     self.scan_points, desired_curvature, self.curvature)
+         speed, turn = self.controller.step(
+-            now, self.distance, self.yaw, self.speed, self.lane, self.front, fresh,
++            now, self.distance, self.yaw, self.speed, sweep_lane, self.front, safety_fresh,
+             self.curvature, navigation_active=overtake.active)
+         pivot_turn = 0.
+         if (not overtake.active and self.controller.state == 'OBSTACLE_WAIT'
+                 and not self.controller.stop_pending and not self.controller.light_wait):
+             pivot_turn = corner_pivot(
+-                self.scan_points, self.lane, self.curvature, self.front,
++                self.scan_points, sweep_lane, self.curvature, self.front,
+                 self.settings.stop_distance)
+             if pivot_turn:
+                 s
