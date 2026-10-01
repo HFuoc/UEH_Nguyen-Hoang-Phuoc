@@ -1,0 +1,92 @@
+peed, turn = 0., max(-self.settings.max_turn,
+@@ -243,7 +289,8 @@
+         if speed > cap:
+             turn *= cap/speed
+             speed = cap
+-        if fresh and self.crossing.update(self.people, self.scan_points, self.lane, now):
++        if (safety_fresh and image_fresh
++                and self.crossing.update(self.people, self.scan_points, camera_lane, now)):
+             speed, turn = 0., 0.
+             self.controller.state = 'CROSSING_WAIT'
+         self.publish(speed, turn)
+@@ -255,10 +302,12 @@
+         if now-self.last_log >= .10 or changed:
+             x, y = self.position or (0., 0.)
+             self.writer.writerow([now,wall,state,self.distance,x,y,self.speed,speed,turn,
+-                                  self.lane.lateral,self.lane.heading,self.lane.confidence,
++                                  camera_lane.lateral,camera_lane.heading,camera_lane.confidence,
+                                   self.front,self.controller.light_color,self.signs.stop,
+                                   self.sign_actions.label,len(self.people),self.curvature,
+-                                  self.overtake.state,pivot_turn])
++                                  self.overtake.state,pivot_turn,self.corridor.confidence,
++                                  self.corridor.heading,self.corridor.width,
++                                  int(image_fresh),int(safety_fresh),nav_source])
+             self.stream.flush()
+             self.last_log = now
+         if self.image is not None and (now-self.last_save >= 5. or changed):
+@@ -279,8 +328,11 @@
+                 x,y,w,h=sign.bbox
+                 cv2.rectangle(frame,(x,y),(x+w,y+h),(0,255,0),1)
+                 cv2.putText(frame,sign.label,(x,max(12,y-3)),cv2.FONT_HERSHEY_SIMPLEX,.4,(0,255,0),1)
+-            cv2.putText(frame,f'{state} v={speed:.2f} c={self.lane.confidence:.2f}',
++            cv2.putText(frame,f'{state} v={speed:.2f} c={camera_lane.confidence:.2f} {nav_source}',
+                         (8,22),cv2.FONT_HERSHEY_SIMPLEX,.5,(0,255,255),1)
++            if self.corridor.confidence > .2:
++                cv2.putText(frame,f'corr c={self.corridor.confidence:.2f} h={self.corridor.heading:+.2f}',
++                            (8,42),cv2.FONT_HERSHEY_SIMPLEX,.45,(0,200,255),1)
+             cv2.imwrite(str(self.output/f'{now:010.2f}_{state}.jpg'),frame)
+             self.last_save = now
+ 
+--- a/tests/test_navigation.py
++++ b/tests/test_navigation.py
+@@ -7,7 +7,7 @@
+ 
+ sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'src/crc_solution'))
+ from crc_solution.navigation import (scan_points, swept_clearance, rotation_clearance,
+-                                     corner_pivot)
++                                     corner_pivot, corridor_lane)
+ from crc_solution.freshness import SensorFreshness
+ from crc_solution.perception import Perception
+ 
+@@ -41,6 +41,41 @@
+         self.assertTrue(math.isinf(swept_clearance(np.empty((0, 2)), 0.)))
+         self.assertIsNone(scan_points([math.nan]*360, 0., math.pi/180, .12, 3.5))
+ 
++    def test_recorded_pre_tunnel_self_return_is_rejected(self):
++        # A real fresh Gazebo run leaked this point from our own lower chassis.
++        # It is only 0.05 mm beyond the old y cut-off and caused a permanent
++        # false OBSTACLE_WAIT before the tunnel.
++        base_x, base_y = -.05513545, -.14005344
++        lidar_x = base_x + .064
++        radius = math.hypot(lidar_x, base_y)
++        angle = math.atan2(base_y, lidar_x)
++        angle_min, inc = -math.pi, math.pi/180
++        rays = [math.inf]*361
++        rays[round((angle-angle_min)/inc)] = radius
++        points = scan_points(rays, angle_min, inc, .01, 3.5)
++        self.assertIsNotNone(points)
++        self.assertEqual(len(points), 0)
++
++    def test_close_real_wall_outside_robot_envelope_is_retained(self):
++        base_x, base_y = .02, -.27
++        lidar_x = base_x + .064
++        radius = math.hypot(lidar_x, base_y)
++        angle = math.atan2(base_y, lidar_x)
++        angle_min, inc = -math.pi, math.pi/180
++        rays = [math.inf]*361
++        rays[round((angle-angle_min)/inc)] = radius
++        points = scan_points(rays, angle_min, inc, .01, 3.5)
++        self.assertEqual(len(points), 1)
++        self.assertLess(points[0,1], -.24)
++
++    def test_recorded_tunnel_scan_provides_corridor_assist(self):
++        points = np.load(str(Path(__file__).parent/'data/tunnel_bend_scan.npz'))['points']
++        corridor = corridor_lane(points)
++        self.assertGreater(corridor.confidence, .5)
++        self.assertGreater(corridor.target_y, .08)
++        self.assertGreater(corridor.width, .60)
++        self.assertLess(corridor.width, .85)
++
+     def test_curved_wall_does_not_block_safe_arc(self):
+         # Two concentric walls with 0.20 m clearance from a left-turning path.
+         theta = np.linspace(-.3, 1.6, 150)
