@@ -43,9 +43,7 @@ jobs:
           cat ci_patch/fix2_* > /tmp/fix2.patch
           git apply --check /tmp/fix2.patch
           git apply /tmp/fix2.patch
-          cat ci_patch/fix3_* > /tmp/fix3.patch
-          git apply --check /tmp/fix3.patch
-          git apply /tmp/fix3.patch
+          python3 ci_patch/apply_fix3.py
           python3 tools/check_rules.py
 
       - name: Build ROS 2 Humble and Gazebo image
