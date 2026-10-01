@@ -1,0 +1,1 @@
+Development trial full_v12: 15.488 m wheel odometry in a 300 s evaluation. Passed the ramp and tunnel; later departed the lane and stopped LANE_LOST. Not full-map completion, not official route distance. Fingerprint records the exact pre-curve-fit source.

@@ -24,7 +24,7 @@ class SafetyTests(unittest.TestCase):
         self.assertEqual(self.step(2,fresh=False),(0.,0.))
 
     def test_obstacle_requires_clear_dwell(self):
-        self.assertEqual(self.step(0,front=.22),(0.,0.))
+        self.assertEqual(self.step(0,front=.21),(0.,0.))
         self.assertEqual(self.step(.1),(0.,0.))
         self.assertEqual(self.step(.5),(0.,0.))
         self.assertGreater(self.step(.8)[0],0.)
@@ -57,9 +57,10 @@ class SafetyTests(unittest.TestCase):
         for t in (0.,.1,.2):
             self.c.observe(Signs(light='green',light_distance=.25),t,0.)
         self.step(.2)
-        for t in (.3,.4,.5):
-            self.c.observe(Signs(light='yellow',light_distance=.2),t,.1)
-        self.assertGreater(self.step(.5,distance=.1)[0],0.)
+        self.step(.3,distance=.23)
+        for t in (.4,.5,.6):
+            self.c.observe(Signs(light='yellow',light_distance=.1),t,.24)
+        self.assertGreater(self.step(.6,distance=.24)[0],0.)
         self.c = Controller()
         for t in (0.,.1,.2):
             self.c.observe(Signs(light='yellow',light_distance=.4),t,0.)
@@ -68,12 +69,27 @@ class SafetyTests(unittest.TestCase):
     def test_lost_lane_is_bounded(self):
         self.step(0)
         self.assertGreater(self.step(.2,lane=Lane())[0],0.)
-        self.assertEqual(self.step(.6,lane=Lane()),(0.,0.))
+        self.assertEqual(self.step(4.1,lane=Lane()),(0.,0.))
+
+    def test_lane_prediction_is_bounded_by_distance_and_retains_arc(self):
+        _,turn=self.step(0,lane=Lane(.06,.1,1.,.08))
+        speed,grace_turn=self.step(.2,lane=Lane(),distance=.1)
+        self.assertGreater(turn,0.)
+        self.assertGreater(grace_turn,0.)
+        self.assertLessEqual(speed,.04)
+        self.assertEqual(self.step(.3,lane=Lane(),distance=.19),(0.,0.))
 
     def test_turn_direction_and_speed_parameter(self):
         self.assertGreater(self.step(0,lane=Lane(.05,.1,1.,.06))[1],0.)
         self.c.settings.max_speed=.06
         self.assertLessEqual(self.step(.1)[0],.06)
+
+    def test_angular_limit_preserves_collision_checked_curvature(self):
+        self.c.settings.max_speed=.30
+        self.c.settings.max_turn=.05
+        speed,turn=self.c.step(0.,0.,0.,0.,self.lane,math.inf,True,curvature=2.)
+        self.assertAlmostEqual(turn/speed,2.)
+        self.assertLessEqual(abs(turn),.05)
 
     def test_lidar_angle_origin(self):
         rays = [math.inf]*360

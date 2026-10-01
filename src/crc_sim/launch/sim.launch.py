@@ -120,7 +120,8 @@ def launch_setup(context, *_args, **_kwargs):
             name='traffic_light',
             output='screen',
             condition=IfCondition(LaunchConfiguration('lights')),
-            parameters=[{'use_sim_time': True}],
+            parameters=[{'use_sim_time': True,
+                         'seed': int(LaunchConfiguration('traffic_seed').perform(context))}],
         ),
         # Walks the pedestrian across the crossing. Conditioned on props,
         # because that is the flag that spawns the pedestrian model itself.
@@ -194,6 +195,8 @@ def generate_launch_description():
                               description='Top-down camera -> /sky_cam/image_raw'),
         DeclareLaunchArgument('lights', default_value='true',
                               description='Spawn the traffic lights'),
+        DeclareLaunchArgument('traffic_seed', default_value='0',
+                              description='Traffic-light random seed; development evaluation'),
         DeclareLaunchArgument('signs', default_value='true',
                               description='Spawn the traffic signs'),
         DeclareLaunchArgument('tunnel_seg', default_value='0.13',

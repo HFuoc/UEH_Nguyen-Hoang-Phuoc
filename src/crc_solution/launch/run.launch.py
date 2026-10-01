@@ -7,7 +7,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('max_speed', default_value='0.12'),
+        DeclareLaunchArgument('max_speed', default_value='0.18'),
         DeclareLaunchArgument('log_dir', default_value='/tmp/crc_results'),
         Node(package='crc_solution', executable='driver', name='crc_driver',
              output='screen', parameters=[{

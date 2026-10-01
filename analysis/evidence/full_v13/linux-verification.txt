@@ -1,0 +1,107 @@
+test_dark_lane_and_blank (test_core.ImageTests) ... ok
+test_projected_lane_center_and_offset (test_core.ImageTests) ... ok
+test_real_desaturated_green_lamp (test_core.ImageTests) ... ok
+test_real_taper_frame_keeps_near_corridor (test_core.ImageTests) ... ok
+test_real_unmarked_ramp_edge (test_core.ImageTests) ... ok
+test_stop_plate_and_lamp (test_core.ImageTests) ... ok
+test_warning_triangle_is_not_stop (test_core.ImageTests) ... ok
+test_angular_limit_preserves_collision_checked_curvature (test_core.SafetyTests) ... ok
+test_clock_reset_drops_old_stop_timer (test_core.SafetyTests) ... ok
+test_lane_prediction_is_bounded_by_distance_and_retains_arc (test_core.SafetyTests) ... ok
+test_lidar_angle_origin (test_core.SafetyTests) ... ok
+test_lost_lane_is_bounded (test_core.SafetyTests) ... ok
+test_nan_scan_is_not_clear (test_core.SafetyTests) ... ok
+test_obstacle_requires_clear_dwell (test_core.SafetyTests) ... ok
+test_ramp_self_returns_do_not_block_forward_corridor (test_core.SafetyTests) ... ok
+test_red_wait_and_green_release (test_core.SafetyTests) ... ok
+test_rejects_unsafe_settings (test_core.SafetyTests) ... ok
+test_stop_requires_stationary_two_seconds (test_core.SafetyTests) ... ok
+test_turn_direction_and_speed_parameter (test_core.SafetyTests) ... ok
+test_waits_for_all_sensors (test_core.SafetyTests) ... ok
+test_yellow_before_and_inside_junction (test_core.SafetyTests) ... ok
+test_duplicates_and_old_delivery_are_not_fresh (test_navigation.FreshnessTests) ... ok
+test_future_outlier_does_not_poison_next_valid_sample (test_navigation.FreshnessTests) ... ok
+test_reset_and_future_stamps (test_navigation.FreshnessTests) ... ok
+test_small_clock_delivery_skew_is_accepted (test_navigation.FreshnessTests) ... ok
+test_curved_wall_does_not_block_safe_arc (test_navigation.NavigationTests) ... ok
+test_obstacle_on_turn_and_tail_sweep_are_detected (test_navigation.NavigationTests) ... ok
+test_only_extended_paired_walls_shorten_lookahead (test_navigation.NavigationTests) ... ok
+test_paired_curve_does_not_follow_wrong_straight_boundary (test_navigation.NavigationTests) ... ok
+test_ramp_self_returns_keep_front_and_rear_obstacles (test_navigation.NavigationTests) ... ok
+test_recorded_tunnel_posts_do_not_reverse_steering (test_navigation.NavigationTests) ... ok
+test_sparse_boundary_after_hairpin_allows_slow_recovery (test_navigation.NavigationTests) ... ok
+test_straight_obstacle_and_invalid_scan (test_navigation.NavigationTests) ... ok
+test_kerb_and_distant_actor_do_not_stop (test_pedestrians.PedestrianTests) ... ok
+test_projected_actor_and_coloured_square_negative (test_pedestrians.PedestrianTests) ... ok
+test_short_camera_occlusion_uses_scan (test_pedestrians.PedestrianTests) ... ok
+test_waits_in_other_lane_then_requires_clear_dwell (test_pedestrians.PedestrianTests) ... ok
+test_known_visible_signs_in_camera_frames (test_recorded_signs.RecordedSignTests) ... ok
+test_pedestrian_seen_in_crosswalk_frame (test_recorded_signs.RecordedSignTests) ... ok
+test_absence_without_travel_does_not_rearm (test_sign_actions.SignActionTests) ... ok
+test_caution_signs_cap_speed_and_expire_by_travel (test_sign_actions.SignActionTests) ... ok
+test_clock_reset_clears_caution_highway_and_confirmation (test_sign_actions.SignActionTests) ... ok
+test_confirmation_requires_separate_recent_frames (test_sign_actions.SignActionTests) ... ok
+test_continuously_visible_sign_does_not_extend_zone (test_sign_actions.SignActionTests) ... ok
+test_far_or_invalid_depth_does_not_trigger (test_sign_actions.SignActionTests) ... ok
+test_highway_entry_exit_and_later_entry (test_sign_actions.SignActionTests) ... ok
+test_missing_frame_resets_confirmation (test_sign_actions.SignActionTests) ... ok
+test_same_type_rearms_after_absence_and_travel (test_sign_actions.SignActionTests) ... ok
+test_all_eight_resized_appearances (test_sign_classifier.SignClassifierTests) ... ok
+test_depth_scales_with_observed_size_and_camera_focal_length (test_sign_classifier.SignClassifierTests) ... ok
+test_mild_unseen_perspective_and_brightness (test_sign_classifier.SignClassifierTests) ... ok
+test_no_guess_when_icon_is_occluded (test_sign_classifier.SignClassifierTests) ... ok
+test_rejects_unmarked_shapes_and_traffic_lamps (test_sign_classifier.SignClassifierTests) ... ok
+test_small_dim_noisy_appearances (test_sign_classifier.SignClassifierTests) ... ok
+test_tiny_or_random_regions_do_not_get_a_label (test_sign_classifier.SignClassifierTests) ... ok
+test_continuously_visible_stop_does_not_rearm_after_travel (test_traffic.TrafficTests) ... ok
+test_green_frames_cannot_extend_committed_junction (test_traffic.TrafficTests) ... ok
+test_new_stop_after_absence_and_travel_is_handled (test_traffic.TrafficTests) ... ok
+test_stale_entry_and_distant_green_cannot_commit_junction (test_traffic.TrafficTests) ... ok
+test_stationary_green_does_not_mean_inside_junction (test_traffic.TrafficTests) ... ok
+test_stop_absence_without_travel_does_not_rearm (test_traffic.TrafficTests) ... ok
+test_wait_requires_confirmed_nearby_green_to_release (test_traffic.TrafficTests) ... ok
+test_yellow_after_reaching_entry_does_not_stop_inside (test_traffic.TrafficTests) ... ok
+test_yellow_still_stops_after_nearby_green_without_entry (test_traffic.TrafficTests) ... ok
+test_clipped_stop_backing_cannot_be_a_lamp (test_traffic_perception.TrafficPerceptionTests) ... ok
+test_housed_lamps_on_dim_background (test_traffic_perception.TrafficPerceptionTests) ... ok
+test_real_desaturated_green_lamp_keeps_housing_detection (test_traffic_perception.TrafficPerceptionTests) ... ok
+test_stop_on_bright_background (test_traffic_perception.TrafficPerceptionTests) ... ok
+test_stop_on_dark_background_is_not_a_red_lamp (test_traffic_perception.TrafficPerceptionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 69 tests in 0.896s
+
+OK
+[INFO] [1790870554.107819993] [crc_driver]: Evidence: /tmp/crc_ros_test_xmjt90ng/20261001T160234_090796Z
+[INFO] [1790870554.171502446] [crc_driver]: FOLLOW: odom distance=0.00 m
+[INFO] [1790870557.442390931] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+[INFO] [1790870557.913611828] [crc_driver]: FOLLOW: odom distance=0.00 m
+[INFO] [1790870559.192078564] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+[INFO] [1790870559.661965451] [crc_driver]: FOLLOW: odom distance=0.00 m
+[INFO] [1790870560.142843981] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+[INFO] [1790870560.561839371] [crc_driver]: FOLLOW: odom distance=0.00 m
+[INFO] [1790870561.794514550] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+[INFO] [1790870562.314597085] [crc_driver]: FOLLOW: odom distance=0.00 m
+[INFO] [1790870563.544908643] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+[INFO] [1790870564.007935478] [crc_driver]: FOLLOW: odom distance=0.00 m
+[INFO] [1790870565.298058540] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+ROS integration PASS: motion, parameters, camera/LiDAR loss, invalid ranges, stale stamps, future-stamp recovery, clock timeout, executable TERM stop
+Starting >>> crc_solution
+Finished <<< crc_solution [0.79s]
+--- stderr: crc_solution
+warning: build_py: byte-compiling is disabled, skipping.
+
+warning: install_lib: byte-compiling is disabled, skipping.
+
+---
+
+Summary: 1 package finished [1.02s]
+  1 package had stderr output: crc_solution
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-10-01-16-02-52-010968-ubuntu-47
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [driver-1]: process started with pid [48]
+[driver-1] [INFO] [1790870572.782892620] [crc_driver]: Evidence: /tmp/crc_results/20261001T160252_762070Z
+[driver-1] [INFO] [1790870572.816341595] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+Clean container build and one-command launch PASS
+
+EXIT_CODE=0

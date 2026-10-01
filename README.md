@@ -7,9 +7,9 @@
 **Student ID:** 31231021201  
 **Private repository name:** `UEH_Nguyen-Hoang-Phuoc`
 
-This is an AI-assisted Python/ROS 2 Humble baseline for the UEH CRC 2026 simulation round. It implements camera lane following, STOP and traffic-light heuristics, and LiDAR obstacle stopping. Overtaking is disabled. Check `PROGRESS.md` for measured validation status; feature presence is not evidence of successful track completion.
+This is an AI-assisted Python/ROS 2 Humble solution for the UEH CRC 2026 simulation round. It implements camera lane following, STOP/light handling, sign caution zones, pedestrian crossing holds and curved-path LiDAR collision checking. Overtaking is disabled. Check `PROGRESS.md` for measured validation status; feature presence is not evidence of successful track completion.
 
-Final recorded batch: five runs reached 8.807–8.887 m of wheel-odometry path length and stopped at the tunnel bend. The median of the three default-pose runs is 8.850 m. This is not an official completion distance or competition score. The repository includes the CSVs, selected camera evidence, plots and an 11-page report draft.
+Historical baseline batch (`9b22639`): five runs reached 8.807–8.887 m of wheel-odometry path length and stopped at the tunnel bend. The median of the three default-pose runs is 8.850 m. This is not an official completion distance or competition score. The 11-page report and submission ZIP describe that baseline; current code improvements and their trials are tracked separately in `PROGRESS.md`.
 
 ## Environment and installation
 
@@ -48,29 +48,29 @@ The launcher does not start/reset Gazebo, spawn entities, or query ground truth.
 
 `camera + camera_info -> lane/sign perception -> behaviour controller -> /cmd_vel`
 
-`scan -> body corridor clearance -> behaviour controller`
+`scan -> swept body/wheel clearance and bounded steering correction -> behaviour controller`
 
 `odom -> short-term motion, stationary detection and travelled distance`
 
-The only motion publisher is `/crc_driver`. A wall-clock watchdog stops motion when sensor delivery or the simulation clock stops. STOP holding uses simulation time and measured stationary speed. The controller never reads track coordinates or the official world/model/config files.
+The only motion publisher is `/crc_driver`. Wall-clock and source-timestamp watchdogs stop motion on missing, stale or invalid sensors, or a paused simulation clock. STOP holding uses simulation time and measured stationary speed. The controller never reads track coordinates or the official world/model/config files.
 
-Lane boundaries are projected onto a locally flat ground plane using stock camera calibration. A consensus fit rejects isolated crossing marks. A broad bright ramp may supply a visible side boundary when it covers the painted lane. The controller follows the inferred lane centre with a curvature command and reduces speed for uncertainty and turns. Brief missing markings use the last observation adjusted by odometry yaw; sustained loss stops the robot.
+Lane boundaries are projected onto a locally flat ground plane using stock camera calibration. A consensus fit rejects isolated crossing marks. A broad bright ramp may supply a visible side boundary when it covers the painted lane. Lookahead shortens when LiDAR observes extended walls on both sides. The controller reduces speed for uncertainty and turns. Missing markings use the last local arc for at most four simulation seconds and 0.18 m of odometric travel, at reduced speed; sustained loss stops the robot. Collision checking covers the swept body and wheels, including rear swing, and limits steering corrections around the camera path.
 
-Traffic controls use colour/shape and confirmation over multiple images. Light candidates need a dark housing. This lightweight detector is imperfect; inspect annotated evidence rather than assuming all signs are recognized. Only STOP has an implemented sign-specific action. Crossing stripes prompt slower approach; LiDAR governs obstruction stopping. No unvalidated lane change is attempted.
+Traffic controls use colour/shape and confirmation over multiple images. Lamps require a visible dark housing; clipped plates at image edges are rejected as lamps. A separate classifier matches eight supplied sign appearances from package-local templates. STOP has a stationary hold; ramp, tunnel, uneven road, crossing and bus signs apply bounded caution speed limits. Highway entry/exit is tracked but does not enable overtaking. Purple/indigo actor appearance triggers a crossing hold across both lanes, with short LiDAR association during occlusion and a one-second clear interval. This detector is specific to the supplied actor; generic LiDAR stopping remains active for other objects.
 
 ## Runtime parameters and video demonstration
 
 ```bash
 ros2 param get /crc_driver max_speed
 ros2 param set /crc_driver max_speed 0.08
-ros2 param set /crc_driver max_speed 0.12
+ros2 param set /crc_driver max_speed 0.18
 ```
 
 Explain that lower speed reduces distance per second and allows gentler motion; it does not improve the camera detector itself. Parameters include `max_speed`, `max_turn`, `steering_gain`, `stop_distance`, `sensor_timeout`, `lane_grace`, and `stop_hold`. Invalid dynamic values are rejected; STOP duration cannot be set below two seconds.
 
 ## Evidence and verification
 
-Each run writes CSV telemetry and annotated JPEGs under `/tmp/crc_results/<timestamp>/`. Copy results out before removing the container. Store raw evidence in `results/` locally; it is excluded from Git to avoid large commits.
+Each run writes CSV telemetry, camera JPEGs, selected lossless PNGs and local scan points under `/tmp/crc_results/<timestamp>/`. CSVs include processing time, sensor ages and estimated light range. Copy results out before removing a manually started container. The development harness binds telemetry directly into its case directory and captures logs on exit. Store full evidence in `results/` locally; it is excluded from Git to avoid large commits.
 
 ```bash
 python -m unittest discover -s tests -v
@@ -85,7 +85,7 @@ For live rule checking, run `ros2 node info /crc_driver` and inspect subscriptio
 
 ## Limitations and submission
 
-Camera projection assumes stock camera mounting and approximately level ground; ramps can bias it. Junction branch choice follows visible lane continuity and is not a route planner. STOP/light heuristics can miss small, occluded or oblique objects. A persistently lost red light leaves the robot stopped. The forward LiDAR corridor can see a tunnel wall on a sharp bend and stop the robot before it finishes turning. Stationary obstacles can prevent further progress because overtaking is disabled.
+Camera projection assumes stock camera mounting and approximately level ground; ramps can bias it. Junction branch choice follows visible lane continuity and is not a route planner. STOP/light heuristics can miss small, occluded or oblique objects. A persistently lost red light leaves the robot stopped. LiDAR self-return filtering masks a calibrated envelope behind the nose, so objects already inside that envelope are not independently resolved. Tight turns and sparse markings remain evaluation targets. Stationary obstacles can prevent further progress because overtaking is disabled. Eight appearance labels do not imply eight validated driving behaviours.
 
 The recorded evaluation restarts the simulator three times at the default pose and twice at changed poses. It retains the official traffic controller's default seed 0; multi-seed robustness has not been established. The unused overhead camera is disabled during these runs to reduce rendering load; onboard sensors and physical challenges remain enabled.
 

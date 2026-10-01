@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import math
 import cv2
 import numpy as np
+from .curves import fit_curve
 
 
 @dataclass
@@ -16,6 +17,7 @@ class Lane:
     confidence: float = 0.0
     target_y: float = 0.0
     points: list = field(default_factory=list)
+    curvature: float = None
 
 
 @dataclass
@@ -43,6 +45,8 @@ class Perception:
         self.height = 0.117
         self.offset = 0.069
         self.last_center = 0.0
+        self.curve_active = False
+        self.last_curve = 0.
 
     def calibrate(self, matrix):
         if matrix[0] > 0 and matrix[4] > 0:
@@ -56,7 +60,9 @@ class Perception:
         smooth = cv2.GaussianBlur(gray, (31, 31), 0)
         contrast = gray.astype(np.int16) - smooth.astype(np.int16)
         threshold = max(32.0, float(np.percentile(gray[image.shape[0]//2:], 90)) * .65)
-        mask = ((gray > threshold) & (hsv[:, :, 1] < 90) &
+        # White paint is nearly neutral. Blue-grey light leaks on tunnel wall
+        # posts otherwise form convincing false lane pairs above the road.
+        mask = ((gray > threshold) & (hsv[:, :, 1] < 30) &
                 ((contrast > 9) | (gray > 180))).astype(np.uint8) * 255
         h, w = gray.shape
         points, weights, overlay = [], [], []
@@ -90,9 +96,14 @@ class Perception:
                         candidates.append((score, center, 1.0))
             if not candidates:
                 for peak in peaks:
-                    for center in (peak-width/2, peak+width/2):
-                        if 0 <= center < w and abs(center-prediction) < .4*width:
-                            candidates.append((abs(center-prediction)/width+.3, center, .45))
+                    # In right-hand travel the continuous outer boundary is
+                    # on the right; the centre marking may be dashed/absent.
+                    # Do not reinterpret that same edge as the left boundary
+                    # when the robot is displaced outside it. An inferred
+                    # centre outside the image is still a useful correction.
+                    for center, bias in ((peak-width/2,-.2), (peak+width/2,.5)):
+                        if abs(center-prediction) < .9*width:
+                            candidates.append((abs(center-prediction)/width+bias, center, .45))
             if broad_rows >= 3:
                 for middle,size in row_runs:
                     if size < .45*w:
@@ -127,8 +138,9 @@ class Perception:
             for j in range(i+1, len(points_arr)):
                 if abs(points_arr[j,0]-points_arr[i,0]) < .05:
                     continue
-                model = np.polyfit(points_arr[[i,j],0], points_arr[[i,j],1], 1)
-                keep = np.abs(np.polyval(model,points_arr[:,0])-points_arr[:,1]) < .025
+                slope = (points_arr[j,1]-points_arr[i,1])/(points_arr[j,0]-points_arr[i,0])
+                intercept = points_arr[i,1]-slope*points_arr[i,0]
+                keep = np.abs(slope*points_arr[:,0]+intercept-points_arr[:,1]) < .025
                 score = float(weights_arr[keep].sum())
                 if best is None or score > best[0]: best = (score,keep)
         if best is not None and np.count_nonzero(best[1]) >= 3:
@@ -138,8 +150,25 @@ class Perception:
         confidence = min(1., sum(weights_arr)/3.) * max(0., 1.-residual/.06)
         near = float(np.polyval(fit, .30))
         self.last_center = float(np.clip(.5*self.last_center+.5*near, -.07, .07))
-        return Lane(near, math.atan(float(fit[0])), confidence,
-                    float(np.polyval(fit, .45)), overlay), mask
+        lane = Lane(near, math.atan(float(fit[0])), confidence,
+                    float(np.polyval(fit, .45)), overlay)
+        # A single straight regression can connect a dashed inner edge to
+        # the wrong outer boundary on a tight bend. Require paired spatial
+        # support for a curved corridor before overriding that regression.
+        k, offset, score, support = fit_curve(mask, self, self.last_curve)
+        threshold = .43 if self.curve_active else .50
+        paired = .10 if self.curve_active else .20
+        active = (abs(k) > 1. and score > threshold and min(support) > paired)
+        self.curve_active = active
+        if active:
+            self.last_curve = k
+            theta = .70*k
+            x = math.sin(theta)/k
+            y = offset+(1.-math.cos(theta))/k
+            curvature = 2*y/(x*x+y*y)
+            lane = Lane(offset, math.atan(.45*k), min(.85, score),
+                        y, overlay, curvature)
+        return lane, mask
 
     def signs(self, image):
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -161,15 +190,39 @@ class Perception:
                 x, y, bw, bh = cv2.boundingRect(contour)
                 if not .45 < bw/max(bh, 1) < 1.7 or bw > .35*w:
                     continue
-                # A lamp sits inside a tall dark housing; inspect its adjacent
-                # vertical column. A coloured plate does not have this housing.
-                left, right = max(0, x-bw//2), min(w, x+bw+bw//2+1)
-                above = val[max(0,y-3*bh):y, left:right]
-                below = val[y+bh:min(h,y+4*bh), left:right]
-                darkness = max(float(np.mean(a < 65)) if a.size else 0. for a in (above, below))
                 perimeter = cv2.arcLength(contour, True)
                 circularity = 4*math.pi*area/max(perimeter**2, 1)
-                lamp = darkness > .62 and circularity > .50 and bw < .12*w
+                # Require a bounded, tall housing around the lamp. A dark
+                # background alone is not housing: otherwise an octagonal
+                # STOP in shadow becomes red and can never release the car.
+                # Relative contrast also preserves a black housing against a
+                # dim background rather than using a fixed darkness test.
+                left, right = max(0, x-2*bw), min(w, x+3*bw)
+                top, bottom = max(0, y-4*bh), min(h, y+5*bh)
+                context = val[top:bottom, left:right]
+                dark_limit = min(65., float(np.percentile(context, 75))-5.)
+                housing = False
+                # A clipped STOP and its black backing can look like a round
+                # lamp in a tall housing. Require the whole coloured component
+                # and housing to be visible before using their size as range.
+                complete = (x > 1 and x+bw < w-1 and y > 1
+                            and y+bh < int(min(.65*h, self.cy+15))-1)
+                if complete and dark_limit > 0 and circularity > .50 and bw < .12*w:
+                    dark = (context < dark_limit).astype(np.uint8)
+                    surrounds, _ = cv2.findContours(dark, cv2.RETR_EXTERNAL,
+                                                    cv2.CHAIN_APPROX_SIMPLE)
+                    center_x, center_y = x+bw/2-left, y+bh/2-top
+                    for surround in surrounds:
+                        sx, sy, sw, sh = cv2.boundingRect(surround)
+                        if (sx <= center_x <= sx+sw and sy <= center_y <= sy+sh
+                                and left+sx > 0 and left+sx+sw < w
+                                and top+sy > 0 and top+sy+sh < h
+                                and 1.1*bw <= sw <= 4*bw and sh >= 2.2*bh
+                                and .12 < sw/max(sh, 1) < .85
+                                and cv2.contourArea(surround)/(sw*sh) > .35):
+                            housing = True
+                            break
+                lamp = housing
                 if lamp:
                     distance = self.fx*.034/max(bw, 1)
                     if distance < result.light_distance:

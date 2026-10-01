@@ -1,3 +1,28 @@
+# Runtime checkpoint (2026-10-02)
+
+Priority: improve START-to-FINISH driving and keep a runnable ZIP available. Report work is postponed.
+
+## Available package
+
+`UEH_Nguyen-Hoang-Phuoc_runtime.zip` is built by `python tools/package_submission.py`; its companion `.sha256` and internal manifest verify every file. The current runtime source matches the fingerprint of `full_v13` exactly. REPORT.pdf and the older `_submission.zip` describe the historical 9b22639 baseline.
+
+## Verified checkpoint
+
+- `full_v13`: **15.514 m wheel-odometry path length**, ended LANE_LOST after the tunnel/hairpin. Evaluation ended at 256.8 simulation seconds after no progress. **Not START-to-FINISH, not official route distance or score.** Evidence and source hashes: `analysis/evidence/full_v13/`.
+- `full_v12`: 15.488 m over the 300-second evaluation; similar later lane loss. Historical baseline stopped at ~8.85 m at the tunnel bend.
+- 69 unit/regression tests pass on Windows and Linux. ROS integration checks sensor loss, invalid LiDAR, stale/future stamps, paused clock, live parameters and the executable's final stop on TERM. Clean-container build and one-command launch pass.
+- Protected assets: 19 SHA-256 checks match. Live graph audit passes. No ground-truth/map queries in the runtime solution.
+- Fixes include clipped STOP/lamp confusion, stale green entry, STOP rearming, ramp self returns, curved body/wheel collision checking, bounded paint-gap prediction and watchdog recovery. Added packaged eight-sign appearance matching and pedestrian crossing holds.
+- Conservative max_speed default is now 0.18 m/s; turning, low confidence and caution zones reduce it. This is the value exercised by full_v13.
+
+## Current limitation and next work
+
+The camera can confuse the lane boundaries after the hairpin, particularly when entering the BUS bend off-centre. A targeted trial from a better centred pose (`bus_right_v4`) continued 4.339 m over 120 seconds, but this did not transfer reliably to a complete START run. A later heading-fit experiment failed and was removed from the checkpoint.
+
+A camera-only right-boundary tracing prototype is being investigated in `.local/trace_lane.py`. Do not package it unless runtime testing shows improvement. Overtaking remains absent. Full-map completion, repeated-run robustness of the new revision, official RMS and collision counts remain unverified.
+
+No development trial is currently required to keep running. VM workspace: `/home/fish/crc_ws`. Use unique case names with `scripts/guest_develop.sh`; never sync runtime source while its evaluation is active. Check termination reason in `evaluation.json`, not just exit_code.
+
 # Baseline status
 
 Private repository: https://github.com/HFuoc/UEH_Nguyen-Hoang-Phuoc

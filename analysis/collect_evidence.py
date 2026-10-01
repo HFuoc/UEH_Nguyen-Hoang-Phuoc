@@ -21,7 +21,7 @@ for source in args.batch.rglob('telemetry.csv'):
         raw=chosen.with_name(chosen.name.replace('_FOLLOW.jpg','_camera.jpg'))
         if raw.exists(): shutil.copy2(raw,target/raw.name)
     case=source.parents[2]
-    for name in ['node-info.txt','driver.log','simulator.log']:
+    for name in ['node-info.txt','driver.log','simulator.log','case.json','completion.json','evaluation.json']:
         if (case/name).exists(): shutil.copy2(case/name,target/name)
     (target/'provenance.json').write_text(json.dumps({'case':case.name,'raw_source':source.as_posix(),
         'note':'CSV is complete; image set is a small selected subset. No official score is inferred.'},indent=2)+'\n')
