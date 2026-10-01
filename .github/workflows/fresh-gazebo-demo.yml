@@ -28,7 +28,7 @@ jobs:
           from pathlib import Path
           p=Path('/tmp/current_patch.b64')
           s=p.read_text()
-          i=18700
+          i=18730
           assert len(s)==54828, len(s)
           assert s[i]=='h', (i,s[i])
           s=s[:i]+'j'+s[i+1:]
