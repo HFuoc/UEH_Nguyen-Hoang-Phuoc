@@ -1,0 +1,98 @@
+--- a/src/crc_solution/crc_solution/control.py
++++ b/src/crc_solution/crc_solution/control.py
+@@ -1,6 +1,8 @@
+ """Deterministic behaviour arbitration; independent of ROS for replay/tests."""
+ from dataclasses import dataclass
++from collections import deque
++from statistics import median
+ import math
+ from .perception import Lane, Signs
+ 
+@@ -59,6 +61,10 @@
+         # never a route/map instruction.
+         self.junction_turn_hint = 0.0
+         self.junction_commit_until = -math.inf
++        # Distance-sampled curvature history.  It lets a STOP-controlled
++        # intersection preserve only a sustained approach turn, instead of
++        # trusting the ambiguous paint immediately around the stop line.
++        self.route_history = deque(maxlen=96)
+ 
+     def observe(self, observation, now, distance):
+         # Called once per image, never once per control tick on a cached image.
+@@ -73,7 +79,9 @@
+             self.stop_seen_at = now
+             if (self.stop_armed and self.stop_count >= 3
+                     and observation.stop_distance < .65):
++                if not self.stop_pending:
++                    self.junction_turn_hint = self._historical_turn_intent(distance)
+                 self.stop_pending = True
+         else:
+             self.stop_count = 0
+@@ -88,6 +96,42 @@
+         else:
+             self.light_count = 0
+ 
++    def _remember_route(self, distance, curvature, lane):
++        """Keep approximately distance-uniform, high-confidence route samples."""
++        if (self.stop_pending or lane.confidence < .55 or curvature is None
++                or not math.isfinite(curvature) or abs(curvature) > 2.2):
++            return
++        sample = (float(distance), float(curvature))
++        # Do not let slow motion overweight one place in the road.
++        if self.route_history and distance-self.route_history[-1][0] < .012:
++            self.route_history[-1] = sample
++        else:
++            self.route_history.append(sample)
++
++    def _historical_turn_intent(self, distance):
++        """Return a sustained pre-STOP bend, otherwise zero.
++
++        The nearest 0.25 m is intentionally excluded.  That is exactly where
++        STOP lines, cross-road markings and sign poles can corrupt the camera
++        lane fit.  All distances are relative travelled odometry; no map
++        coordinate or route-specific location is used.
++        """
++        values = [(d, k) for d, k in self.route_history
++                  if distance-.85 <= d <= distance-.25]
++        if len(values) < 10:
++            return 0.0
++        if values[-1][0]-values[0][0] < .28:
++            return 0.0
++        curvatures = [k for _, k in values]
++        centre = float(median(curvatures))
++        if abs(centre) < .72:
++            return 0.0
++        same = sum(1 for k in curvatures if k*centre > 0.)/len(curvatures)
++        strong = sum(1 for k in curvatures
++                     if k*centre > 0. and abs(k) >= .55)/len(curvatures)
++        if same < .80 or strong < .65:
++            return 0.0
++        return max(-1.8, min(1.8, centre))
++
+     def route_curvature_hint(self, distance):
+         if distance < self.junction_commit_until and abs(self.junction_turn_hint) >= .60:
+             return self.junction_turn_hint
+@@ -109,6 +153,7 @@
+             self.stop_stationary_since = None
+             self.state = 'WAIT_SENSORS'
+             return 0., 0.
++        self._remember_route(distance, curvature, lane)
+         if front < s.stop_distance:
+             self.obstacle_wait, self.clear_since = True, None
+         elif self.obstacle_wait:
+@@ -119,15 +164,8 @@
+                 self.obstacle_wait = False
+         if self.stop_pending:
+             # At a marked intersection, lane paint is often ambiguous just
+-            # after the stop line.  Remember a strong pre-stop bend so a
+-            # transverse marking cannot reverse the route immediately after
+-            # the mandatory hold.
+-            if (abs(self.junction_turn_hint) < .60 and lane.confidence >= .55
+-                    and curvature is not None and math.isfinite(curvature)
+-                    and abs(curvature) >= .65):
+-                self.junction_turn_hint = max(-1.8, min(1.8, float(curvature)))
++            # after the stop line. Turn intent was frozen from a history
++            # window that ends before this ambiguous area.
+             if abs(measured_speed) < .01:
+                 if self.stop_stationary_since is None:
+                     self.stop_stationary_since = now
