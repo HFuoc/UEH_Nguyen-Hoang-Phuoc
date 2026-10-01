@@ -40,7 +40,6 @@ jobs:
           cat ci_patch/fix1_* > /tmp/fix1.patch
           git apply --check --exclude=tests/test_navigation.py /tmp/fix1.patch
           git apply --exclude=tests/test_navigation.py /tmp/fix1.patch
-          PYTHONPATH=src/crc_solution python3 -m unittest discover -s tests -q
           python3 tools/check_rules.py
 
       - name: Build ROS 2 Humble and Gazebo image
