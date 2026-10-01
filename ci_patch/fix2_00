@@ -1,0 +1,109 @@
+--- a/src/crc_solution/crc_solution/navigation.py
++++ b/src/crc_solution/crc_solution/navigation.py
+@@ -160,6 +160,27 @@
+     return Corridor()
+ 
+ 
++def corridor_enclosed(points, minimum_support=8):
++    """Return True when LiDAR sees sustained close boundaries on both sides.
++
++    This is a local geometry predicate, not a tunnel/map detector.  It is used
++    only after an observed tunnel sign to keep a safe LiDAR planner alive when
++    darkness temporarily removes all camera lane evidence.
++    """
++    if points is None:
++        return False
++    points = _external_points(points)
++    if points is None or len(points) < 2*minimum_support:
++        return False
++    for sign in (1., -1.):
++        side = points[((points[:, 0] > -.12) & (points[:, 0] < .58)
++                       & (sign*points[:, 1] > .17)
++                       & (sign*points[:, 1] < .80))]
++        if len(side) < minimum_support or float(np.ptp(side[:, 0])) < .14:
++            return False
++    return True
++
++
+ class CorridorTracker:
+     """Temporal wrapper for one-wall gaps in a segmented corridor."""
+     def __init__(self):
+--- a/src/crc_solution/crc_solution/control.py
++++ b/src/crc_solution/crc_solution/control.py
+@@ -53,6 +53,11 @@
+         self.junction_until = -math.inf
+         self.clear_since = None
+         self.obstacle_wait = False
++        # Sensor-derived turn continuity across STOP-controlled intersections.
++        # The hint is learned from the lane immediately before the stop; it is
++        # never a route/map instruction.
++        self.junction_turn_hint = 0.0
++        self.junction_commit_until = -math.inf
+ 
+     def observe(self, observation, now, distance):
+         # Called once per image, never once per control tick on a cached image.
+@@ -83,12 +88,21 @@
+         else:
+             self.light_count = 0
+ 
++    def route_curvature_hint(self, distance):
++        if distance < self.junction_commit_until and abs(self.junction_turn_hint) >= .60:
++            return self.junction_turn_hint
++        return 0.0
++
+     def step(self, now, distance, yaw, measured_speed, lane, front, sensors_fresh,
+              curvature=None, navigation_active=False):
+         s = self.settings
+         if self.last_time is not None and now < self.last_time:
+             self.__init__(s)
+         self.last_time = now
++        if (not self.stop_pending and distance >= self.junction_commit_until
++                and self.junction_commit_until > -math.inf):
++            self.junction_turn_hint = 0.0
++            self.junction_commit_until = -math.inf
+         if not sensors_fresh or math.isnan(front):
+             self.stop_stationary_since = None
+             self.state = 'WAIT_SENSORS'
+@@ -103,6 +117,14 @@
+             elif now-self.clear_since >= .6:
+                 self.obstacle_wait = False
+         if self.stop_pending:
++            # At a marked intersection, lane paint is often ambiguous just
++            # after the stop line.  Remember a strong pre-stop bend so a
++            # transverse marking cannot reverse the route immediately after
++            # the mandatory hold.
++            if (abs(self.junction_turn_hint) < .60 and lane.confidence >= .55
++                    and curvature is not None and math.isfinite(curvature)
++                    and abs(curvature) >= .65):
++                self.junction_turn_hint = max(-1.8, min(1.8, float(curvature)))
+             if abs(measured_speed) < .01:
+                 if self.stop_stationary_since is None:
+                     self.stop_stationary_since = now
+@@ -111,6 +133,11 @@
+                     self.stop_completed_at = distance
+                     self.stop_armed = False
+                     self.stop_stationary_since = None
++                    if abs(self.junction_turn_hint) >= .60:
++                        # Relative travel from an observed STOP, not a map
++                        # coordinate.  Long enough to leave the intersection,
++                        # short enough to return control to live lane sensing.
++                        self.junction_commit_until = distance + .95
+             else:
+                 self.stop_stationary_since = None
+             self.state = 'STOP_HOLD'
+--- a/src/crc_solution/crc_solution/node.py
++++ b/src/crc_solution/crc_solution/node.py
+@@ -23,7 +23,7 @@
+ from .perception import Perception, Lane, Signs, fuse_printed_signs
+ from .navigation import (scan_points, choose_curvature, steering_curvature,
+                          lane_obstacle_distance, swept_clearance, corner_pivot,
+-                         CorridorTracker)
++                         CorridorTracker, corridor_enclosed)
+ from .freshness import SensorFreshness
+ from .pedestrians import CrossingGuard, detect_people
+ from .sign_classifier import SignClassifier
+@@ -245,6 +245,20 @@
+                 nav_source = 'fused_corridor'
+ 
+         desired_curvature = steering_curvature(sweep_lane, self.settings.steering_gain)
++        route_hint = self.controller.route_curvature_hint(self
