@@ -8,4 +8,5 @@ __pycache__/
 guest-*.txt
 results/
 *.zip
+*.zip.sha256
 UEH_CRC_2026_Simulation_Guideline.pdf

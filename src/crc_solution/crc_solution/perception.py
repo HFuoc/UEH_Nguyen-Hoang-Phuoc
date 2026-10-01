@@ -8,6 +8,7 @@ import math
 import cv2
 import numpy as np
 from .curves import fit_curve
+from .boundary import trace_lane
 
 
 @dataclass
@@ -54,6 +55,21 @@ class Perception:
             self.cx, self.cy = float(matrix[2]), float(matrix[5])
 
     def lane(self, image):
+        lane, mask = self.base_lane(image)
+        if lane.curvature is None:
+            trace = trace_lane(mask, self)
+            uncertain = lane.confidence < .8
+            displaced = trace.confidence > .8 and abs(trace.target_y-lane.target_y) > .1
+            aligned_edge = lane.confidence >= .7 and abs(lane.heading) > .25
+            if (trace.valid and trace.confidence > .80 and (uncertain or displaced)
+                    and not aligned_edge):
+                center = np.asarray(trace.center)
+                near = center[np.argmin(abs(center[:,0]-.30)),1]
+                lane = Lane(float(near), math.atan(.35*trace.curvature),
+                            trace.confidence, trace.target_y, lane.points, trace.curvature)
+        return lane, mask
+
+    def base_lane(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         # A local contrast requirement keeps uniform dim asphalt out of the mask.
@@ -96,12 +112,10 @@ class Perception:
                         candidates.append((score, center, 1.0))
             if not candidates:
                 for peak in peaks:
-                    # In right-hand travel the continuous outer boundary is
-                    # on the right; the centre marking may be dashed/absent.
-                    # Do not reinterpret that same edge as the left boundary
-                    # when the robot is displaced outside it. An inferred
-                    # centre outside the image is still a useful correction.
-                    for center, bias in ((peak-width/2,-.2), (peak+width/2,.5)):
+                    # A single edge may be either boundary. Rank both using
+                    # the previous local centre; a fixed right-edge preference
+                    # follows the wrong branch when entering an S bend.
+                    for center, bias in ((peak-width/2,.2), (peak+width/2,.2)):
                         if abs(center-prediction) < .9*width:
                             candidates.append((abs(center-prediction)/width+bias, center, .45))
             if broad_rows >= 3:

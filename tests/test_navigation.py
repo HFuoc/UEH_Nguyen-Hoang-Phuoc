@@ -13,6 +13,20 @@ from crc_solution.control import Controller
 
 
 class NavigationTests(unittest.TestCase):
+    def test_continuous_edge_recovers_from_wrong_side_of_boundary(self):
+        # bus_arc_v1 / 20261001T154851_633029Z / 61.70 s. The old row fit
+        # relabelled the outer boundary and drove toward the sign pole.
+        lane,_=Perception().lane(cv2.imread(str(Path(__file__).parent/'data/shoulder_boundary.jpg')))
+        self.assertGreater(lane.confidence,.7)
+        self.assertGreater(steering_curvature(lane),1.)
+
+    def test_continuous_edge_does_not_reverse_supported_lane_heading(self):
+        # full_v14 / 213.80 s: a second continuous line belongs to the other
+        # lane; its trace must not reverse a strongly supported right heading.
+        lane,_=Perception().lane(cv2.imread(str(Path(__file__).parent/'data/angled_boundary.jpg')))
+        self.assertGreater(lane.confidence,.7)
+        self.assertLess(steering_curvature(lane),-.5)
+
     def test_paired_curve_does_not_follow_wrong_straight_boundary(self):
         # full_v12 / 20261001T130748_381014Z / 231.30 s. A straight fit
         # steered left into the outside of a clearly right-curving corridor.

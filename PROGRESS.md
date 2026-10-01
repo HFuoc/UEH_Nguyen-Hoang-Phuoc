@@ -1,3 +1,10 @@
+# Latest fix checkpoint: full_v15 (2026-10-02)
+
+- Removed fixed right-boundary bias; added continuous-edge recovery with a guard against reversing a supported lane heading.
+- START trial: 19.2305 m wheel odometry in 300 simulation seconds; still ends LANE_LOST at a later bend. NOT full map or official route distance.
+- 71 tests pass on Windows/Linux; ROS fault checks and clean-container build/launch pass. Evidence: analysis/evidence/full_v15/.
+- runtime.zip now packages this source. Older checkpoints and report below are historical. Next: inspect full_v15 frames before the later lane loss; overtaking remains absent.
+
 # Runtime checkpoint (2026-10-02)
 
 Priority: improve START-to-FINISH driving and keep a runnable ZIP available. Report work is postponed.
