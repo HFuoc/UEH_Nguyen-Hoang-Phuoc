@@ -41,6 +41,8 @@ ros2 param get /crc_driver max_speed
 
 Nói bằng lời của bạn: giảm tốc độ cực đại từ 0,12 xuống 0,08 m/s khiến robot đi chậm hơn. Thuật toán còn tự giảm tốc khi cua hoặc độ tin cậy thấp nên vận tốc thực tế có thể nhỏ hơn giá trị đặt.
 
+Thay đổi bằng `ros2 param set` chỉ giữ trong lần chạy hiện tại. Nếu dừng driver rồi chạy lại để trình diễn, dùng `ros2 launch crc_solution run.launch.py max_speed:=0.08` để khởi động với tốc độ mới.
+
 ## Hiểu mã nguồn
 
 - `perception.py`: tìm vạch qua nhiều hàng ảnh, ước lượng tâm làn và nhận dạng STOP/đèn; không biết tọa độ vật thể.

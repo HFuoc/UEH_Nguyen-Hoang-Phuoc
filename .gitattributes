@@ -5,3 +5,5 @@
 src/crc_sim/worlds/** -text
 src/crc_sim/models/** -text
 src/crc_sim/config/** -text
+# Preserve captured evidence bytes, including whitespace emitted by ROS/Gazebo.
+analysis/evidence/** -text -whitespace

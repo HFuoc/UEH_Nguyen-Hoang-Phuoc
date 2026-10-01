@@ -1,0 +1,50 @@
+test_dark_lane_and_blank (test_core.ImageTests) ... ok
+test_projected_lane_center_and_offset (test_core.ImageTests) ... ok
+test_real_desaturated_green_lamp (test_core.ImageTests) ... ok
+test_real_taper_frame_keeps_near_corridor (test_core.ImageTests) ... ok
+test_real_unmarked_ramp_edge (test_core.ImageTests) ... ok
+test_stop_plate_and_lamp (test_core.ImageTests) ... ok
+test_warning_triangle_is_not_stop (test_core.ImageTests) ... ok
+test_clock_reset_drops_old_stop_timer (test_core.SafetyTests) ... ok
+test_lidar_angle_origin (test_core.SafetyTests) ... ok
+test_lost_lane_is_bounded (test_core.SafetyTests) ... ok
+test_nan_scan_is_not_clear (test_core.SafetyTests) ... ok
+test_obstacle_requires_clear_dwell (test_core.SafetyTests) ... ok
+test_ramp_self_returns_do_not_block_forward_corridor (test_core.SafetyTests) ... ok
+test_red_wait_and_green_release (test_core.SafetyTests) ... ok
+test_rejects_unsafe_settings (test_core.SafetyTests) ... ok
+test_stop_requires_stationary_two_seconds (test_core.SafetyTests) ... ok
+test_turn_direction_and_speed_parameter (test_core.SafetyTests) ... ok
+test_waits_for_all_sensors (test_core.SafetyTests) ... ok
+test_yellow_before_and_inside_junction (test_core.SafetyTests) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.183s
+
+OK
+[INFO] [1790832530.957389844] [crc_driver]: Evidence: /tmp/crc_ros_test_er2z137z/20261001T052850_912817Z
+[INFO] [1790832531.012566449] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+[INFO] [1790832531.070968071] [crc_driver]: FOLLOW: odom distance=0.00 m
+[INFO] [1790832534.317010111] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+[INFO] [1790832534.788827115] [crc_driver]: FOLLOW: odom distance=0.00 m
+[INFO] [1790832536.115684800] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+ROS integration PASS: motion, parameter update/rejection, camera timeout, clock timeout
+Starting >>> crc_solution
+Finished <<< crc_solution [2.33s]
+--- stderr: crc_solution
+warning: build_py: byte-compiling is disabled, skipping.
+
+warning: install_lib: byte-compiling is disabled, skipping.
+
+---
+
+Summary: 1 package finished [3.10s]
+  1 package had stderr output: crc_solution
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-10-01-05-29-03-316062-ubuntu-47
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [driver-1]: process started with pid [48]
+[driver-1] [INFO] [1790832544.996352474] [crc_driver]: Evidence: /tmp/crc_results/20261001T052904_939025Z
+[driver-1] [INFO] [1790832544.999357591] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+Clean container build and one-command launch PASS
+
+EXIT_CODE=0

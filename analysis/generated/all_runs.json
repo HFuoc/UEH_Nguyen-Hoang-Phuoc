@@ -1,15 +1,17 @@
 [
   {
-    "source": "results\\default_1\\crc_results\\20261001T050203_272867Z\\telemetry.csv",
-    "samples": 534,
-    "duration_sim_s": 80.6,
-    "distance_wheel_odom_m": 1.3186124453528854,
-    "lane_estimate_rms_m": 0.04932984304387739,
-    "lane_confident_sample_fraction": 0.36704119850187267,
+    "source": "analysis/evidence/20261001T052745Z/20261001T052757_177931Z/telemetry.csv",
+    "case": "default_1",
+    "samples": 1217,
+    "duration_sim_s": 191.3,
+    "distance_wheel_odom_m": 8.849975112479166,
+    "lane_estimate_rms_m": 0.03016457852134658,
+    "lane_confident_sample_fraction": 0.9967132292522597,
     "states_seen": [
       "FOLLOW",
       "LANE_GRACE",
-      "LANE_LOST",
+      "LIGHT_WAIT",
+      "OBSTACLE_WAIT",
       "STOP_HOLD",
       "WAIT_SENSORS"
     ],
@@ -17,16 +19,17 @@
     "note": "Wheel odometry path length is not route completion. Camera lane RMS is not ground-truth RMS."
   },
   {
-    "source": "results\\default_2\\crc_results\\20261001T050339_672677Z\\telemetry.csv",
-    "samples": 799,
-    "duration_sim_s": 123.6,
-    "distance_wheel_odom_m": 2.180342136490232,
-    "lane_estimate_rms_m": 0.09494367281453944,
-    "lane_confident_sample_fraction": 0.6057571964956195,
+    "source": "analysis/evidence/20261001T052745Z/20261001T053153_496153Z/telemetry.csv",
+    "case": "default_2",
+    "samples": 1203,
+    "duration_sim_s": 189.2,
+    "distance_wheel_odom_m": 8.846323902799295,
+    "lane_estimate_rms_m": 0.028947316400232254,
+    "lane_confident_sample_fraction": 1.0,
     "states_seen": [
       "FOLLOW",
-      "LANE_GRACE",
-      "LANE_LOST",
+      "LIGHT_WAIT",
+      "OBSTACLE_WAIT",
       "STOP_HOLD",
       "WAIT_SENSORS"
     ],
@@ -34,16 +37,18 @@
     "note": "Wheel odometry path length is not route completion. Camera lane RMS is not ground-truth RMS."
   },
   {
-    "source": "results\\default_3\\crc_results\\20261001T050605_634615Z\\telemetry.csv",
-    "samples": 594,
-    "duration_sim_s": 94.9,
-    "distance_wheel_odom_m": 1.5503819777397596,
-    "lane_estimate_rms_m": 0.055536075887844545,
-    "lane_confident_sample_fraction": 0.45454545454545453,
+    "source": "analysis/evidence/20261001T052745Z/20261001T053541_481885Z/telemetry.csv",
+    "case": "default_3",
+    "samples": 1198,
+    "duration_sim_s": 188.5,
+    "distance_wheel_odom_m": 8.852522739020163,
+    "lane_estimate_rms_m": 0.029321988342543837,
+    "lane_confident_sample_fraction": 0.998330550918197,
     "states_seen": [
       "FOLLOW",
       "LANE_GRACE",
-      "LANE_LOST",
+      "LIGHT_WAIT",
+      "OBSTACLE_WAIT",
       "STOP_HOLD",
       "WAIT_SENSORS"
     ],
@@ -51,32 +56,19 @@
     "note": "Wheel odometry path length is not route completion. Camera lane RMS is not ground-truth RMS."
   },
   {
-    "source": "results\\pre_trial\\20261001T045614_730000Z\\telemetry.csv",
-    "samples": 764,
-    "duration_sim_s": 279.5,
-    "distance_wheel_odom_m": 0.32234505059752405,
-    "lane_estimate_rms_m": 0.035609509815922896,
-    "lane_confident_sample_fraction": 0.03534031413612566,
+    "source": "analysis/evidence/20261001T052745Z/20261001T053928_194496Z/telemetry.csv",
+    "case": "shifted_a",
+    "samples": 1320,
+    "duration_sim_s": 208.70000000000002,
+    "distance_wheel_odom_m": 8.806937997195204,
+    "lane_estimate_rms_m": 0.03350974809728732,
+    "lane_confident_sample_fraction": 0.865909090909091,
     "states_seen": [
       "FOLLOW",
       "LANE_GRACE",
       "LANE_LOST",
-      "WAIT_SENSORS"
-    ],
-    "official_score": null,
-    "note": "Wheel odometry path length is not route completion. Camera lane RMS is not ground-truth RMS."
-  },
-  {
-    "source": "results\\shifted_a\\crc_results\\20261001T050753_268023Z\\telemetry.csv",
-    "samples": 576,
-    "duration_sim_s": 88.9,
-    "distance_wheel_odom_m": 1.344311241773106,
-    "lane_estimate_rms_m": 0.055058111801882505,
-    "lane_confident_sample_fraction": 0.3628472222222222,
-    "states_seen": [
-      "FOLLOW",
-      "LANE_GRACE",
-      "LANE_LOST",
+      "LIGHT_WAIT",
+      "OBSTACLE_WAIT",
       "STOP_HOLD",
       "WAIT_SENSORS"
     ],
@@ -84,32 +76,18 @@
     "note": "Wheel odometry path length is not route completion. Camera lane RMS is not ground-truth RMS."
   },
   {
-    "source": "results\\trial\\crc_results\\20261001T045614_730000Z\\telemetry.csv",
-    "samples": 819,
-    "duration_sim_s": 288.6,
-    "distance_wheel_odom_m": 0.3223586508256386,
-    "lane_estimate_rms_m": 0.035609509815922896,
-    "lane_confident_sample_fraction": 0.03296703296703297,
+    "source": "analysis/evidence/20261001T052745Z/20261001T054345_460728Z/telemetry.csv",
+    "case": "shifted_b",
+    "samples": 1181,
+    "duration_sim_s": 185.3,
+    "distance_wheel_odom_m": 8.887426901478213,
+    "lane_estimate_rms_m": 0.0281396605604719,
+    "lane_confident_sample_fraction": 0.995766299745978,
     "states_seen": [
       "FOLLOW",
       "LANE_GRACE",
-      "LANE_LOST",
-      "WAIT_SENSORS"
-    ],
-    "official_score": null,
-    "note": "Wheel odometry path length is not route completion. Camera lane RMS is not ground-truth RMS."
-  },
-  {
-    "source": "results\\trial\\crc_results\\20261001T045854_200992Z\\telemetry.csv",
-    "samples": 436,
-    "duration_sim_s": 59.1,
-    "distance_wheel_odom_m": 2.2817878841178674,
-    "lane_estimate_rms_m": 0.05187475021837317,
-    "lane_confident_sample_fraction": 0.8463302752293578,
-    "states_seen": [
-      "FOLLOW",
-      "LANE_GRACE",
-      "LANE_LOST",
+      "LIGHT_WAIT",
+      "OBSTACLE_WAIT",
       "STOP_HOLD",
       "WAIT_SENSORS"
     ],

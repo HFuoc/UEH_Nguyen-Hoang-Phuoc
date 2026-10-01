@@ -1,0 +1,6 @@
+{
+  "cases": 5,
+  "default_cases": 3,
+  "median_default_wheel_distance_m": 8.849975112479166,
+  "note": "This median is measured wheel path length, not the official performance score."
+}

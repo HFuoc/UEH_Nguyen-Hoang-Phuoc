@@ -17,3 +17,5 @@ Record exactly one continuous six-minute take. Speak English, show your face in 
 Understand before recording: positive angular velocity turns left; STOP timing begins only when odometry reports almost zero speed; missing sensors trigger zero velocity; no ground-truth topic is used. Explain why a camera confidence estimate is not an official scoring metric.
 
 Use this outline for rehearsal, not a script to read. Recording and personal explanation must be performed by the participant.
+
+Runtime parameter edits reset when the node restarts. To demonstrate a restart with the changed value, launch with `ros2 launch crc_solution run.launch.py max_speed:=0.08` after stopping the first driver. Never run both instances together.

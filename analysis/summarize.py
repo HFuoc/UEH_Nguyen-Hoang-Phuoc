@@ -2,6 +2,7 @@
 import argparse
 import csv
 import json
+import statistics
 from pathlib import Path
 import numpy as np
 import matplotlib
@@ -21,7 +22,10 @@ def summarize(csv_path, output):
     confidence=series('lane_confidence')
     valid=confidence >= .35
     lateral=series('lane_lateral_est_m')
-    metrics={'source':str(csv_path),'samples':len(rows),'duration_sim_s':float(t[-1]),
+    provenance=csv_path.parent/'provenance.json'
+    case=json.loads(provenance.read_text())['case'] if provenance.exists() else next(
+        (p.name for p in csv_path.parents if p.name.startswith(('default_','shifted_'))),'development')
+    metrics={'source':csv_path.as_posix(),'case':case,'samples':len(rows),'duration_sim_s':float(t[-1]),
              'distance_wheel_odom_m':float(series('distance_odom_m')[-1]),
              'lane_estimate_rms_m':float(np.sqrt(np.mean(lateral[valid]**2))) if valid.any() else None,
              'lane_confident_sample_fraction':float(np.mean(valid)),
@@ -57,6 +61,11 @@ def main():
         if result: reports.append(result)
     args.out.mkdir(parents=True,exist_ok=True)
     (args.out/'all_runs.json').write_text(json.dumps(reports,indent=2)+'\n')
+    defaults=[r['distance_wheel_odom_m'] for r in reports if r['case'].startswith('default_')]
+    (args.out/'batch_summary.json').write_text(json.dumps({
+        'cases':len(reports),'default_cases':len(defaults),
+        'median_default_wheel_distance_m':statistics.median(defaults) if defaults else None,
+        'note':'This median is measured wheel path length, not the official performance score.'},indent=2)+'\n')
     print(json.dumps(reports,indent=2))
 
 

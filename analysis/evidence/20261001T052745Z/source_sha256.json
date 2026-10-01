@@ -1,0 +1,8 @@
+{
+  "src/crc_solution/setup.py": "e66c8f804952a8e825c914087839b149e6b9be3a679fc2780540fcd5956bd6f6",
+  "src/crc_solution/launch/run.launch.py": "75a56c6146a1dbb8a1bf2dd9bf82bc0ba89c4fdc192c7fbe71103dbe5b47e98d",
+  "src/crc_solution/crc_solution/node.py": "b9eef75c7c09116fa690693ee89a17d7fb5cdbd9b541043edacb4a9c93f0146d",
+  "src/crc_solution/crc_solution/__init__.py": "30d883965817ad73aeee8a3957e3ef712eb93e37f499270b82ed7ec21b6bb01f",
+  "src/crc_solution/crc_solution/perception.py": "b5e8ae57fccca9989b1f3636341b356264c8726cf084066bbec8e199d2b21827",
+  "src/crc_solution/crc_solution/control.py": "8a0379c77462668d02fb56de8e4d0920b44529d7d0031c0823d1cb4519b70269"
+}

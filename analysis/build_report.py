@@ -27,11 +27,13 @@ def page(title, paragraphs):
 
 
 runs=json.loads((GENERATED/'all_runs.json').read_text()) if (GENERATED/'all_runs.json').exists() else []
+complete_cases={r.get('case') for r in runs} == {'default_1','default_2','default_3','shifted_a','shifted_b'}
+review_status='DRAFT - Participant review and video are pending.' if complete_cases else 'DRAFT - Personal review and final evaluation are pending.'
 page('CRC 2026 - Technical report',[
-    'DRAFT - Personal review and final evaluation are pending.\nName: Nguyen Hoang Phuoc\nUniversity: University of Economics Ho Chi Minh City (UEH)\nSchool: School of Technology and Design\nInstitute: Institute of Intelligent and Interactive Technologies\nStudent ID: 31231021201',
+    review_status+'\nName: Nguyen Hoang Phuoc\nUniversity: University of Economics Ho Chi Minh City (UEH)\nSchool: School of Technology and Design\nInstitute: Institute of Intelligent and Interactive Technologies\nStudent ID: 31231021201',
     'Goal: drive using onboard camera, LiDAR and wheel odometry. This submission prioritizes a small, explainable controller and conservative stopping. It does not claim complete track coverage or a competition score.',
     'Evidence policy: results in this document come only from recorded driver telemetry and images. Synthetic unit tests establish isolated behaviour, not successful driving. Missing evaluation results are stated explicitly.',
-    'Submission status: the participant must review this report, complete the identity and AI disclosure, and record the required continuous English video.'])
+    'Submission status: the participant must review this report and the AI disclosure, and record the required continuous English video.'])
 p,y=page('System architecture',[
     'The Python package crc_solution is independent of the official simulator package. One node owns motion commands. No simulator entity service, ground-truth stream or route-coordinate file is used.',
     'Image and calibration -> lane and sign observations\nLiDAR -> swept body corridor clearance\nOdometry -> heading, stationary speed and travelled distance\nObservations -> safety and traffic behaviour -> curvature control -> /cmd_vel',
@@ -75,14 +77,14 @@ validation_note=('Local automated checks recorded at '+validation['utc']+'. '+
 page('Validation method',[
     validation_note,
     'Unit tests cover projected lane geometry, dim lanes, blank imagery, STOP versus warning triangles, lamp housing, missing sensors, invalid LiDAR, scan angle conventions, bounded lane prediction, obstacle clearance dwell and traffic behaviour.',
-    'Simulation evaluation targets three independent runs at track_scale=1.0 with all props, signs and lights enabled, plus two valid changed start poses. Each evaluation is bounded to five simulation minutes and stopped early after 45 simulation seconds without progress. Different runs may have different traffic phases.',
+    'Evaluation uses three fresh simulator restarts at track_scale=1.0 with all props, signs and lights enabled, plus two valid changed start poses. Each run is bounded to five simulation minutes and stopped early after 45 simulation seconds without progress. The official light controller defaults to seed 0: these are repeated restarts, not a multi-seed stress test. The unused overhead camera is disabled to reduce rendering load.',
     'CSV telemetry contains time, state, commanded and measured speed, odometry, lane confidence, estimated lane offset and detected traffic controls. Annotated frames are saved periodically and at state transitions.',
     'analysis/summarize.py produces all metric plots from the original CSVs. Estimated lane RMS is not official ground-truth lane RMS; integrated wheel distance is not the route-completion score. No collision or traffic compliance count is inferred without a verified annotation method.'])
 if runs:
     paragraphs=['Recorded runs below are measurements, not competition scores.']
     for r in runs[:8]:
         rms='unavailable' if r['lane_estimate_rms_m'] is None else f"{r['lane_estimate_rms_m']:.4f} m"
-        paragraphs.append(f"{Path(r['source']).parent.name}: duration {r['duration_sim_s']:.1f} simulation s; wheel distance {r['distance_wheel_odom_m']:.3f} m; camera-estimated lane RMS {rms}. States: {', '.join(r['states_seen'])}.")
+        paragraphs.append(f"{r.get('case','development')} ({Path(r['source']).parent.name}): duration {r['duration_sim_s']:.1f} simulation s; wheel distance {r['distance_wheel_odom_m']:.3f} m; camera-estimated lane RMS {rms}. States: {', '.join(r['states_seen'])}.")
     page('Recorded results',paragraphs)
 else:
     page('Recorded results - pending',[
@@ -110,11 +112,11 @@ page('Limitations and next experiments',[
     'Tight lane clearance amplifies calibration and boundary-selection errors. Intersections, crosswalk stripes and multiple parallel markings can create ambiguous candidates. The baseline selects visible continuity; it has no full route planner.',
     'Camera projection assumes approximately level ground. Ramp pitch and tunnel flicker can reduce confidence. A stop is safer than a blind recovery but reduces distance covered.',
     'Small or oblique STOP plates and lamps can be missed or misclassified. Temporal confirmation cannot recover an object that is never detected. Red-light stopping can persist if the lamp is lost from view.',
-    'Stationary obstacles stop progress because overtaking is disabled. Bus-stop, highway and warning-sign-specific actions are incomplete. There is no validated automatic FINISH detector.',
+    'The straight forward LiDAR corridor can intersect the tunnel wall before a sharp bend is completed. The resulting stop is conservative but prevents full route completion. Stationary obstacles also stop progress because overtaking is disabled. Bus-stop, highway and warning-sign-specific actions are incomplete. There is no validated automatic FINISH detector.',
     'Next experiments should focus on real failure frames, camera-ground calibration and short controlled approaches to each traffic object before attempting a more complex lane-change controller.'])
 page('AI assistance and personal review',[
     'AI-generated work in this session: the initial package implementation, unit tests, analysis utilities, environment automation, README, report generator and video rehearsal outline. The AI also inspected supplied simulation assets during development.',
-    'Participant-authored or modified work: PENDING participant declaration. Record exactly what you changed, why you changed it, and what you personally tested. Do not claim sole authorship of generated code.',
+    'Observed participant contributions in this session: supplied the requirements and identity, selected the 24-hour scope, provided access to the existing VM, and freed host disk space. Any independently authored code or personal test work must be declared by the participant after review. Do not claim sole authorship of generated code.',
     'Participant understanding checklist: explain the sign of angular velocity; show how lane pixels become a target; explain sensor timeout and STOP hold; change max_speed live; distinguish an estimated metric from official scoring; describe at least one observed failure.',
     'References: official UEH CRC 2026 Simulation Guideline and Simulation Pack supplied by the organizer; ROS 2 Humble interfaces used by the starter; Docker Ubuntu installation documentation, https://docs.docker.com/engine/install/ubuntu/.',
     'This draft must be personally reviewed before submission. The participant must supply the unedited six-minute video and confirm the repository identity and submission deadline.'])

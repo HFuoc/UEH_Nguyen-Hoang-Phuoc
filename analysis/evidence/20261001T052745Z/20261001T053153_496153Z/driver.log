@@ -1,0 +1,17 @@
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-10-01-05-31-51-388582-ubuntu-232
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [driver-1]: process started with pid [246]
+[driver-1] [INFO] [1790832713.570093590] [crc_driver]: Evidence: /tmp/crc_results/20261001T053153_496153Z
+[driver-1] [INFO] [1790832713.573944818] [crc_driver]: WAIT_SENSORS: odom distance=0.00 m
+[driver-1] [INFO] [1790832713.674240531] [crc_driver]: FOLLOW: odom distance=0.00 m
+[driver-1] [INFO] [1790832730.438600088] [crc_driver]: STOP_HOLD: odom distance=0.91 m
+[driver-1] [INFO] [1790832733.049235039] [crc_driver]: FOLLOW: odom distance=0.91 m
+[driver-1] [INFO] [1790832736.061662566] [crc_driver]: WAIT_SENSORS: odom distance=1.07 m
+[driver-1] [INFO] [1790832736.265916551] [crc_driver]: FOLLOW: odom distance=1.07 m
+[driver-1] [INFO] [1790832776.662680102] [crc_driver]: LIGHT_WAIT: odom distance=3.22 m
+[driver-1] [INFO] [1790832789.280692803] [crc_driver]: FOLLOW: odom distance=3.23 m
+[driver-1] [INFO] [1790832842.049095868] [crc_driver]: OBSTACLE_WAIT: odom distance=7.46 m
+[driver-1] [INFO] [1790832842.859691081] [crc_driver]: FOLLOW: odom distance=7.46 m
+[driver-1] [INFO] [1790832845.599238565] [crc_driver]: OBSTACLE_WAIT: odom distance=7.61 m
+[driver-1] [INFO] [1790832846.413488074] [crc_driver]: FOLLOW: odom distance=7.61 m
+[driver-1] [INFO] [1790832878.554137120] [crc_driver]: OBSTACLE_WAIT: odom distance=8.85 m

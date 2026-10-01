@@ -9,6 +9,8 @@
 
 This is an AI-assisted Python/ROS 2 Humble baseline for the UEH CRC 2026 simulation round. It implements camera lane following, STOP and traffic-light heuristics, and LiDAR obstacle stopping. Overtaking is disabled. Check `PROGRESS.md` for measured validation status; feature presence is not evidence of successful track completion.
 
+Final recorded batch: five runs reached 8.807–8.887 m of wheel-odometry path length and stopped at the tunnel bend. The median of the three default-pose runs is 8.850 m. This is not an official completion distance or competition score. The repository includes the CSVs, selected camera evidence, plots and an 11-page report draft.
+
 ## Environment and installation
 
 Use the official ROS 2 Humble / Gazebo Classic 11 Docker environment. The simulator and solution live in separate ROS packages. Protected world, model and traffic configuration files remain unchanged. The Dockerfile changes package transport to HTTPS for this network.
@@ -83,6 +85,8 @@ For live rule checking, run `ros2 node info /crc_driver` and inspect subscriptio
 
 ## Limitations and submission
 
-Camera projection assumes stock camera mounting and approximately level ground; ramps can bias it. Junction branch choice follows visible lane continuity and is not a route planner. STOP/light heuristics can miss small, occluded or oblique objects. A persistently lost red light leaves the robot stopped. Stationary obstacles can prevent further progress because overtaking is disabled.
+Camera projection assumes stock camera mounting and approximately level ground; ramps can bias it. Junction branch choice follows visible lane continuity and is not a route planner. STOP/light heuristics can miss small, occluded or oblique objects. A persistently lost red light leaves the robot stopped. The forward LiDAR corridor can see a tunnel wall on a sharp bend and stop the robot before it finishes turning. Stationary obstacles can prevent further progress because overtaking is disabled.
+
+The recorded evaluation restarts the simulator three times at the default pose and twice at changed poses. It retains the official traffic controller's default seed 0; multi-seed robustness has not been established. The unused overhead camera is disabled during these runs to reduce rendering load; onboard sensors and physical challenges remain enabled.
 
 Before submission, use the private repository name `UEH_Nguyen-Hoang-Phuoc`, add the judges, confirm the actual deadline, complete the personal AI statement and provide the participant's unedited video in `VIDEO.md`. Do not submit a report containing validation claims you have not reproduced.

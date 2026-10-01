@@ -1,0 +1,109 @@
+[INFO] [launch]: All log files can be found below /root/.ros/log/2026-10-01-05-43-34-232525-ubuntu-1
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gzserver-1]: process started with pid [70]
+[INFO] [robot_state_publisher-2]: process started with pid [72]
+[INFO] [spawn_entity.py-3]: process started with pid [74]
+[INFO] [traffic_light-4]: process started with pid [76]
+[INFO] [pedestrian-5]: process started with pid [78]
+[robot_state_publisher-2] [INFO] [1790833414.975412943] [robot_state_publisher]: got segment base_footprint
+[robot_state_publisher-2] [INFO] [1790833414.975690950] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-2] [INFO] [1790833414.975720119] [robot_state_publisher]: got segment base_scan
+[robot_state_publisher-2] [INFO] [1790833414.975728919] [robot_state_publisher]: got segment camera_link
+[robot_state_publisher-2] [INFO] [1790833414.975736755] [robot_state_publisher]: got segment camera_rgb_frame
+[robot_state_publisher-2] [INFO] [1790833414.975744165] [robot_state_publisher]: got segment camera_rgb_optical_frame
+[robot_state_publisher-2] [INFO] [1790833414.975751683] [robot_state_publisher]: got segment caster_back_left_link
+[robot_state_publisher-2] [INFO] [1790833414.975758384] [robot_state_publisher]: got segment caster_back_right_link
+[robot_state_publisher-2] [INFO] [1790833414.975765023] [robot_state_publisher]: got segment imu_link
+[robot_state_publisher-2] [INFO] [1790833414.975771982] [robot_state_publisher]: got segment wheel_left_link
+[robot_state_publisher-2] [INFO] [1790833414.975779203] [robot_state_publisher]: got segment wheel_right_link
+[gzserver-1] Gazebo multi-robot simulator, version 11.10.2
+[gzserver-1] Copyright (C) 2012 Open Source Robotics Foundation.
+[gzserver-1] Released under the Apache 2 License.
+[gzserver-1] http://gazebosim.org
+[gzserver-1] 
+[gzserver-1] [1;33m[Wrn] [gazebo_ros_init.cpp:178] [0m[1;33m
+[gzserver-1] #     # ####### ####### ###  #####  #######
+[gzserver-1] ##    # #     #    #     #  #     # #
+[gzserver-1] # #   # #     #    #     #  #       #
+[gzserver-1] #  #  # #     #    #     #  #       #####
+[gzserver-1] #   # # #     #    #     #  #       #
+[gzserver-1] #    ## #     #    #     #  #     # #
+[gzserver-1] #     # #######    #    ###  #####  #######
+[gzserver-1] 
+[gzserver-1] This version of Gazebo, now called Gazebo classic, reaches end-of-life
+[gzserver-1] in January 2025. Users are highly encouraged to migrate to the new Gazebo
+[gzserver-1] using our migration guides (https://gazebosim.org/docs/latest/gazebo_classic_migration?utm_source=gazebo_ros_pkgs&utm_medium=cli)
+[gzserver-1] 
+[gzserver-1] [0m[1;33m
+[spawn_entity.py-3] [INFO] [1790833416.262108628] [spawn_waffle]: Spawn Entity started
+[spawn_entity.py-3] [INFO] [1790833416.263316989] [spawn_waffle]: Loading entity published on topic robot_description
+[spawn_entity.py-3] [INFO] [1790833416.269377020] [spawn_waffle]: Waiting for entity xml on robot_description
+[spawn_entity.py-3] [INFO] [1790833416.280488503] [spawn_waffle]: Waiting for service /spawn_entity, timeout = 30
+[spawn_entity.py-3] [INFO] [1790833416.281091525] [spawn_waffle]: Waiting for service /spawn_entity
+[gzserver-1] [0m[1;33m[0m[1;33m[0mALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+[gzserver-1] ALSA lib conf.c:5182:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+[gzserver-1] ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+[gzserver-1] ALSA lib conf.c:5182:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+[gzserver-1] ALSA lib confmisc.c:1334:(snd_func_refer) error evaluating name
+[gzserver-1] ALSA lib conf.c:5182:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+[gzserver-1] ALSA lib conf.c:5705:(snd_config_expand) Evaluate error: No such file or directory
+[gzserver-1] ALSA lib pcm.c:2664:(snd_pcm_open_noupdate) Unknown PCM default
+[gzserver-1] AL lib: (EE) ALCplaybackAlsa_open: Could not open playback device 'default': No such file or directory
+[gzserver-1] [1;31m[Err] [OpenAL.cc:84] [0m[1;31mUnable to open audio device[[0m[1;31mdefault[0m[1;31m]
+[gzserver-1]  Audio will be disabled.
+[gzserver-1] [1;32m[Msg] [0m[1;32mWaiting for master.[0m[1;32m
+[gzserver-1] [0m[1;32m[0m[1;32m[0m[1;32m[Msg] [0m[1;32mConnected to gazebo master @ [0m[1;32mhttp://127.0.0.1:11345[0m[1;32m
+[gzserver-1] [0m[1;32m[0m[1;32m[0m[1;32m[Msg] [0m[1;32mPublicized address: [0m[1;32m192.168.150.128[0m[1;32m
+[gzserver-1] [0m[1;32m[0m[1;32m[0m[1;32m[Msg] [0m[1;32mLoading world file [[0m[1;32m/tmp/crc_track.world[0m[1;32m][0m[1;32m
+[gzserver-1] [0m[INFO] [1790833417.114960331] [gazebo_ros_state]: Publishing states of gazebo models at [/model_states]
+[gzserver-1] [INFO] [1790833417.118075773] [gazebo_ros_state]: Publishing states of gazebo links at [/link_states]
+[pedestrian-5] [INFO] [1790833417.163280805] [pedestrian]: crossing at x=0.96 between y=-1.95 and y=-1.05, 6.4 s per crossing, 15 s at each kerb
+[spawn_entity.py-3] [INFO] [1790833417.289990021] [spawn_waffle]: Calling service /spawn_entity
+[traffic_light-4] [INFO] [1790833417.378852473] [traffic_light]: tl_j44_w: yaw=-3.142, lamp positions resolved
+[traffic_light-4] [INFO] [1790833417.388886121] [traffic_light]: 1 lights (tl_j44_w) | backend=state | cfg=/ws_build/install/crc_sim/share/crc_sim/config/traffic_lights.yaml
+[gzserver-1] [1;33m[Wrn] [Event.cc:61] [0m[1;33mWarning: Deleting a connection right after creation. [0m[1;33mMake sure to save the ConnectionPtr from a Connect call
+[gzserver-1] [0m[INFO] [1790833418.179303000] [crc_camera_plugin]: Publishing camera info to [/camera/camera_info]
+[spawn_entity.py-3] [INFO] [1790833418.322682996] [spawn_waffle]: Spawn status: SpawnEntity: Successfully spawned entity [waffle]
+[INFO] [spawn_entity.py-3]: process has finished cleanly [pid 74]
+[gzserver-1] [INFO] [1790833419.165750223] [crc_diff_drive]: Wheel pair 1 separation set to [0.287000m]
+[gzserver-1] [INFO] [1790833419.165964374] [crc_diff_drive]: Wheel pair 1 diameter set to [0.066000m]
+[gzserver-1] [INFO] [1790833419.169944984] [crc_diff_drive]: Subscribed to [/cmd_vel]
+[gzserver-1] [INFO] [1790833419.175899686] [crc_diff_drive]: Advertise odometry on [/odom]
+[gzserver-1] [INFO] [1790833419.180717384] [crc_diff_drive]: Publishing odom transforms between [odom] and [base_footprint]
+[gzserver-1] [INFO] [1790833419.211511767] [crc_joint_states]: Going to publish joint [wheel_left_joint]
+[gzserver-1] [INFO] [1790833419.211940163] [crc_joint_states]: Going to publish joint [wheel_right_joint]
+[traffic_light-4] [INFO] [1790833419.316289582] [traffic_light]: tl_j44_w -> RED
+[gzserver-1] [1;33m[Wrn] [Publisher.cc:135] [0m[1;33mQueue limit reached for topic [0m[1;33m/gazebo/crc_track/pose/local/info[0m[1;33m, deleting message. [0m[1;33mThis warning is printed only once.[0m[1;33m
+[traffic_light-4] [INFO] [1790833424.348175018] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833430.368370687] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833432.553999025] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833441.498131851] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833450.310922849] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833452.509025369] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833461.919933678] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833469.474897546] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833471.701269266] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833481.622074276] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833487.992818442] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833490.384334231] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833501.320212109] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833507.444602384] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833509.741934792] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833523.146533517] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833533.155246086] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833535.459320716] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833543.941750266] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833552.630996155] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833554.915218631] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833565.677517612] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833572.601426187] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833574.849756945] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833584.281352765] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833592.242791034] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833594.511163801] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833607.671669346] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833614.868453885] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833617.038512669] [traffic_light]: tl_j44_w -> RED
+[traffic_light-4] [INFO] [1790833624.749272438] [traffic_light]: tl_j44_w -> GREEN
+[traffic_light-4] [INFO] [1790833633.467312599] [traffic_light]: tl_j44_w -> YELLOW
+[traffic_light-4] [INFO] [1790833635.659963632] [traffic_light]: tl_j44_w -> RED
