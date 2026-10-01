@@ -23,7 +23,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat ci_patch/part* | base64 -d > /tmp/current_patch.tgz
+          cat ci_patch/part* > /tmp/current_patch.b64
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/current_patch.b64')
+          s=p.read_text()
+          i=18700
+          assert len(s)==54828, len(s)
+          assert s[i]=='h', (i,s[i])
+          s=s[:i]+'j'+s[i+1:]
+          p.write_text(s)
+          PY
+          base64 -d /tmp/current_patch.b64 > /tmp/current_patch.tgz
           echo "55ee83468eb791996e11e5cd195716b0d8143b38f81161772a17f5aa75be75fa  /tmp/current_patch.tgz" | sha256sum -c -
           tar -xzf /tmp/current_patch.tgz -C "$GITHUB_WORKSPACE"
           python3 tools/check_rules.py
