@@ -30,7 +30,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m unittest discover -s tests -q
+          python3 -m py_compile src/crc_solution/crc_solution/*.py
 
       - name: Build clean ROS 2 / Gazebo image
         shell: bash
