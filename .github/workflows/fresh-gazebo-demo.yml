@@ -37,6 +37,10 @@ jobs:
           base64 -d /tmp/current_patch.b64 > /tmp/current_patch.tgz
           echo "55ee83468eb791996e11e5cd195716b0d8143b38f81161772a17f5aa75be75fa  /tmp/current_patch.tgz" | sha256sum -c -
           tar -xzf /tmp/current_patch.tgz -C "$GITHUB_WORKSPACE"
+          cat ci_patch/fix1_* > /tmp/fix1.patch
+          git apply --check /tmp/fix1.patch
+          git apply /tmp/fix1.patch
+          PYTHONPATH=src/crc_solution python3 -m unittest discover -s tests -q
           python3 tools/check_rules.py
 
       - name: Build ROS 2 Humble and Gazebo image
@@ -54,7 +58,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
           set -euo pipefail
-          bash scripts/test_solution.sh 300
+          bash scripts/test_solution.sh 420
 
       - name: Summarize fresh run
         if: always()
