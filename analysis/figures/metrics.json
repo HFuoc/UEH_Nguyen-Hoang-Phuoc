@@ -1,0 +1,17 @@
+{
+  "case": "video_v15",
+  "source": "analysis/evidence/video_v15/20261001T233717_427859Z/telemetry.csv",
+  "distance_odom_m": 21.99916676514317,
+  "logged_duration_s": 299.4,
+  "final_state": "FOLLOW",
+  "state_duration_s": {
+    "CROSSING_WAIT": 11.500000000000007,
+    "FOLLOW": 260.79999999999995,
+    "LANE_GRACE": 20.599999999999994,
+    "STOP_HOLD": 4.900000000000006,
+    "WAIT_SENSORS": 1.6000000000000538
+  },
+  "processing_median_ms": 0.6169059997773729,
+  "processing_p95_ms": 31.779222298428067,
+  "estimated_lateral_rms_m": 0.13033313328392984
+}

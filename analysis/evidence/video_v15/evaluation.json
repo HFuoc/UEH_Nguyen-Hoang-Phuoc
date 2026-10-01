@@ -1,0 +1,6 @@
+{
+  "termination": "duration_limit",
+  "elapsed_sim_s": 300.0,
+  "requested_sim_s": 300.0,
+  "route_completed": null
+}

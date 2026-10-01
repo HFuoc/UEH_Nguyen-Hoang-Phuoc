@@ -1,6 +1,6 @@
 # Chạy và chuẩn bị nộp bài
 
-Bản ZIP mới: `UEH_Nguyen-Hoang-Phuoc_runtime.zip` (kèm `.sha256`). Đã kiểm tra giải nén, 71 kiểm thử và build/launch trong container sạch. Lượt từ START gần nhất đạt 19,23 m odometry, qua dốc và hầm rồi mất làn sau khúc cua; **chưa hoàn thành full map**. `REPORT.pdf` và ZIP `_submission.zip` cũ chưa cập nhật theo mã mới.
+Gói nộp mới: `UEH_Nguyen-Hoang-Phuoc_submission.zip` (kèm `.sha256`). Báo cáo tiếng Anh 15 trang: `REPORT.pdf`; bản Word: `REPORT.docx`. Video mô phỏng: `SIMULATION_DEMO.mp4`, gần 5 phút, 30 fps. Lượt quay đạt 22,00 m odometry; chưa xác minh hoàn thành full map. Gói ZIP đã loại các tệp thử nghiệm và công cụ máy ảo.
 
 Mã nguồn Windows: `D:\simulation`. Bản chạy Ubuntu: `/home/fish/crc_ws`.
 Repository private: https://github.com/HFuoc/UEH_Nguyen-Hoang-Phuoc
