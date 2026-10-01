@@ -1,0 +1,11 @@
+.local/
+build/
+install/
+log/
+__pycache__/
+*.pyc
+*.egg-info/
+guest-*.txt
+results/
+*.zip
+UEH_CRC_2026_Simulation_Guideline.pdf

@@ -1,0 +1,21 @@
+{
+  "src/crc_sim/models/crc_track/materials/textures/crc_track.png": "fcaf6e606699eb5f95e89524ec67bc46087960040a0195e5167755cd4a8e7f28",
+  "src/crc_sim/models/crc_track/materials/scripts/crc_track.material": "301725fa1d45a68d5391c872b5537ae64b60d5609e2550192657602f5b98ba12",
+  "src/crc_sim/models/crc_track/model.config": "4ba4ca4d47ca2b0b7a17d0b5e22d22554c1973a222e2e53aad643c481874604a",
+  "src/crc_sim/models/crc_track/model.sdf": "e3509c8e119ae873cf848bb8ce47fb769fb0dd643043d9fb2113e1732343f0ab",
+  "src/crc_sim/models/crc_signs/materials/textures/sign_stop.png": "bb3899c13714c16dc3f80bb63b42aada07337e1a5ef8b57f5884e9eead7023dd",
+  "src/crc_sim/models/crc_signs/materials/textures/sign_crosswalk.png": "106044f1f53b0543e97c6f7c0e6102cd4a68973e3b924d7b9a3ad8b907c5b9f3",
+  "src/crc_sim/models/crc_signs/materials/textures/sign_hw_entry.png": "543cee599a10acc02de2a50352621c12db1948d4051864edc48e92eadc9e03ae",
+  "src/crc_sim/models/crc_signs/materials/textures/sign_hw_exit.png": "2deae3f659dd1067ac2aa7a0919aaa667889c011092ab35849abe4b5a2065dd5",
+  "src/crc_sim/models/crc_signs/materials/textures/sign_bus.png": "3046401f1c0383a53e2467a4889b3abc634b15f380b7e74b0c2e3b20e884d5b9",
+  "src/crc_sim/models/crc_signs/materials/textures/sign_ramp.png": "8f7d24e848e450b01a546690bcf75b6be2e3e30bd6590157901bace799bcae7f",
+  "src/crc_sim/models/crc_signs/materials/textures/sign_tunnel.png": "68a50a63601a0e6d56f3ce917e32c7412bc15a037ac5266385cbebb68c13a815",
+  "src/crc_sim/models/crc_signs/materials/textures/sign_uneven.png": "281cd83dea1d5a79cfba092cbe8d1776db860611f665ca2edae2272cfde030b5",
+  "src/crc_sim/models/crc_signs/materials/scripts/crc_signs.material": "3c17a33cca160cc2707aac2086f142fb4494931ff9515b71809f81c83dbbfeaf",
+  "src/crc_sim/models/crc_signs/model.config": "1f96371662e5f422f4eb620f8449d952eb1b7562a8b999a1662e60b74c276976",
+  "src/crc_sim/models/crc_signs/model.sdf": "9b500f1ccb1dfe904055560ce536805721e6372de22b2082a41ce66621f9c690",
+  "src/crc_sim/worlds/crc_track.world.xacro": "70420809e224cde4113e687b5349192f98bcd12937d065559cc53e413627dc99",
+  "src/crc_sim/worlds/lights.gen.xacro": "9aaa4d8aeb8ca0166cbb6eaa103b4a6f2cf9cebe0cc088cad47411e71e412ac3",
+  "src/crc_sim/worlds/signs.gen.xacro": "011cc1b0a12444f53aa66402917e3c4208160532c657b134f13a9e3bacdba7c0",
+  "src/crc_sim/config/traffic_lights.yaml": "6e4b9c0d398ed0864fbb1c08c291ad90bc6c91e389a394c04cc6acf7bb4a6427"
+}
