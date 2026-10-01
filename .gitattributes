@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.png -text
+*.jpg -text
+*.pdf -text
+src/crc_sim/worlds/** -text
+src/crc_sim/models/** -text
+src/crc_sim/config/** -text
