@@ -1,0 +1,107 @@
+name: Fresh Gazebo Demo
+
+on:
+  push:
+    branches:
+      - sandbox-gazebo-demo-20261001
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  gazebo-demo:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 55
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply current sandbox patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat ci_patch/part* | base64 -d > /tmp/current_patch.tgz
+          echo "55ee83468eb791996e11e5cd195716b0d8143b38f81161772a17f5aa75be75fa  /tmp/current_patch.tgz" | sha256sum -c -
+          tar -xzf /tmp/current_patch.tgz -C "$GITHUB_WORKSPACE"
+          python3 tools/check_rules.py
+
+      - name: Build ROS 2 Humble and Gazebo image
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/run_docker.sh build
+          bash scripts/run_docker.sh compile
+
+      - name: Run a completely fresh headless Gazebo simulation
+        shell: bash
+        env:
+          CRC_RESULT_DIR: ${{ github.workspace }}/fresh_results
+          CRC_SKIP_COMPILE: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -euo pipefail
+          bash scripts/test_solution.sh 300
+
+      - name: Summarize fresh run
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          echo "=== fresh result tree ==="
+          find fresh_results -maxdepth 4 -type f 2>/dev/null | sort || true
+          t="$(find fresh_results -name telemetry.csv -type f 2>/dev/null | sort | tail -1 || true)"
+          if [ -n "$t" ]; then
+            echo "=== final telemetry ==="
+            tail -1 "$t"
+            echo "=== states ==="
+            python3 - "$t" <<'PY'
+          import csv,sys
+          p=sys.argv[1]
+          rows=list(csv.DictReader(open(p,newline='',encoding='utf-8')))
+          if not rows:
+              raise SystemExit
+          seq=[]
+          for r in rows:
+              s=r.get('state','')
+              if not seq or seq[-1]!=s:
+                  seq.append(s)
+          print(" -> ".join(seq))
+          print("rows:", len(rows))
+          print("max odom distance:", max(float(r.get('distance_odom_m') or r.get('distance') or 0) for r in rows))
+          PY
+          fi
+
+      - name: Render fresh demo MP4 from this run only
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg)
+          find fresh_results -type f -name '*.jpg' ! -name '*_camera.jpg' 2>/dev/null | sort > /tmp/frames.txt || true
+          if [ -s /tmp/frames.txt ]; then
+            : > /tmp/concat.txt
+            while IFS= read -r f; do
+              printf "file '%s/%s'\n" "$GITHUB_WORKSPACE" "$f" >> /tmp/concat.txt
+              printf "duration 0.30\n" >> /tmp/concat.txt
+            done < /tmp/frames.txt
+            last="$(tail -1 /tmp/frames.txt)"
+            printf "file '%s/%s'\n" "$GITHUB_WORKSPACE" "$last" >> /tmp/concat.txt
+            ffmpeg -y -hide_banner -loglevel warning -f concat -safe 0 -i /tmp/concat.txt               -vf "scale=960:-2:flags=lanczos,format=yuv420p" -r 15 fresh_gazebo_demo.mp4
+            ls -lh fresh_gazebo_demo.mp4
+          else
+            echo "No newly recorded debug JPEGs were produced."
+          fi
+
+      - name: Upload fresh Gazebo evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fresh-gazebo-demo
+          if-no-files-found: warn
+          retention-days: 3
+          path: |
+            fresh_results/
+            fresh_gazebo_demo.mp4
