@@ -23,6 +23,8 @@ jobs:
           cat ci_patch/part* | base64 -d > /tmp/current_patch.tgz
           echo "183e8f40ada5c9e1e7f218745c30da03d85c49969d9d4a2ee03a62a0d8b9a11a  /tmp/current_patch.tgz" | sha256sum -c -
           tar -xzf /tmp/current_patch.tgz -C "$GITHUB_WORKSPACE"
+          python3 ci_patch/apply_freshness.py
+          python3 -m py_compile src/crc_solution/crc_solution/freshness.py src/crc_solution/crc_solution/control.py src/crc_solution/crc_solution/node.py
           python3 tools/check_rules.py
 
       - name: Build Docker image and ROS 2 workspace
