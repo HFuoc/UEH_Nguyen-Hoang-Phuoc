@@ -1,0 +1,115 @@
+name: Fresh Gazebo V13
+
+on:
+  push:
+    branches:
+      - sandbox-gazebo-v13-20261001
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gazebo-v13:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply latest runtime overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          base64 -d ci_overlay/v13_latest.b64 > /tmp/v13overlay.tgz
+          echo "e815177491096a94a4ed4a6b23865bfa1f254b4becdd5851f40d2b52e5a7c970  /tmp/v13overlay.tgz" | sha256sum -c -
+          tar -xzf /tmp/v13overlay.tgz -C "$GITHUB_WORKSPACE"
+          python3 tools/check_rules.py
+
+      - name: Build ROS/Gazebo
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash scripts/run_docker.sh build
+          bash scripts/run_docker.sh compile
+
+      - name: Start fresh headless simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p fresh_results/crc_results
+          bash scripts/run_docker.sh down || true
+          docker run -d --name crc --net=host --ipc=host             -e DISPLAY=:99 -e LIBGL_ALWAYS_SOFTWARE=1             -v "$PWD/src":/ws/src             -v "$PWD/scripts":/ws/scripts             -v crc_build:/ws_build             -v "$PWD/fresh_results/crc_results":/tmp/crc_results             crc_sim:humble             bash /ws/scripts/headless_entrypoint.sh skycam:=false
+          for i in $(seq 1 60); do
+            if docker exec crc bash -lc 'source /opt/ros/humble/setup.bash; python3 /ws/scripts/verify_sensors.py' >/tmp/sensors.log 2>&1; then
+              cat /tmp/sensors.log
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/sensors.log || true
+          docker logs crc | tail -100 || true
+          exit 1
+
+      - name: Run current solution for 300 simulation seconds
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec crc bash /ws/scripts/evaluate.sh 300
+          cp /tmp/crc-driver.log fresh_results/driver.log 2>/dev/null || true
+          cp /tmp/crc-node-info.txt fresh_results/node-info.txt 2>/dev/null || true
+          docker logs crc > fresh_results/simulator.log 2>&1 || true
+
+      - name: Summarize run
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          t="$(find fresh_results -name telemetry.csv -type f 2>/dev/null | sort | tail -1 || true)"
+          if [ -n "$t" ]; then
+            python3 - "$t" <<'PY'
+          import csv,sys,collections,math
+          p=sys.argv[1]
+          rows=list(csv.DictReader(open(p,newline='',encoding='utf-8')))
+          print("TELEMETRY",p)
+          print("ROWS",len(rows))
+          if rows:
+              print("FINAL",rows[-1])
+              print("MAX_DISTANCE",max(float(r['distance_odom_m']) for r in rows if r.get('distance_odom_m')))
+              seq=[]
+              for r in rows:
+                  s=r.get('state','')
+                  if not seq or seq[-1]!=s:
+                      seq.append(s)
+              print("STATE_SEQUENCE"," -> ".join(seq))
+              print("COUNTS",collections.Counter(r.get('state','') for r in rows))
+          PY
+          fi
+
+      - name: Render fresh run MP4
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg)
+          find fresh_results -type f -name '*.jpg' ! -name '*_camera.jpg' | sort > /tmp/frames.txt || true
+          if [ -s /tmp/frames.txt ]; then
+            : >/tmp/concat.txt
+            while IFS= read -r f; do
+              printf "file '%s/%s'\n" "$GITHUB_WORKSPACE" "$f" >> /tmp/concat.txt
+              printf "duration 0.22\n" >> /tmp/concat.txt
+            done < /tmp/frames.txt
+            last="$(tail -1 /tmp/frames.txt)"
+            printf "file '%s/%s'\n" "$GITHUB_WORKSPACE" "$last" >> /tmp/concat.txt
+            ffmpeg -y -hide_banner -loglevel warning -f concat -safe 0 -i /tmp/concat.txt               -vf "scale=960:-2:flags=lanczos,format=yuv420p" -r 15 fresh_v13_demo.mp4
+          fi
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fresh-gazebo-v13
+          retention-days: 3
+          if-no-files-found: warn
+          path: |
+            fresh_results/
+            fresh_v13_demo.mp4
