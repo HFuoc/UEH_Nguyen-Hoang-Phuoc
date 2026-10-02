@@ -1,0 +1,129 @@
+--- a/src/crc_solution/crc_solution/navigation.py
++++ b/src/crc_solution/crc_solution/navigation.py
+@@ -1,5 +1,6 @@
+ """Local collision geometry. Uses robot calibration and onboard scans only."""
+ import math
++from dataclasses import dataclass
+ import numpy as np
+ 
+ 
+@@ -25,13 +26,168 @@
+     values[continuous]=np.median(neighbors[:,continuous],axis=0)
+     x = values[valid]*np.cos(angles[valid])-.064
+     y = values[valid]*np.sin(angles[valid])
+-    # Stock Waffle footprint. Pitching can produce returns on its own body.
+-    own_body = (((x > -.21) & (x < .10) & (np.abs(y) < .14))
+-                | ((np.abs(x) < .04) & (np.abs(y) < .163)))
++    # Stock Waffle footprint, with a small calibration margin.  The LiDAR sits
++    # above the chassis, but on ramps / pitch transitions Gazebo can return the
++    # side of our own base and wheels.  A previous 0.140 m cut-off was only
++    # 0.05 mm inside a recorded self-return and caused a permanent false
++    # OBSTACLE_WAIT before the tunnel.  Points inside this envelope cannot be
++    # external obstacles without the rigid collision geometry already
++    # overlapping them, so reject them at the sensor boundary.
++    own_body = (((x >= -.225) & (x <= .105) & (np.abs(y) <= .158))
++                | ((np.abs(x) <= .055) & (np.abs(y) <= .172)))
+     return np.column_stack((x[~own_body], y[~own_body]))
+ 
+ 
+ 
++def _external_points(points):
++    """Defensively remove impossible returns inside the Waffle footprint."""
++    if points is None:
++        return None
++    points = np.asarray(points, dtype=float)
++    if not len(points):
++        return points.reshape((-1, 2))
++    own = (((points[:, 0] >= -.225) & (points[:, 0] <= .105)
++            & (np.abs(points[:, 1]) <= .158))
++           | ((np.abs(points[:, 0]) <= .055)
++              & (np.abs(points[:, 1]) <= .172)))
++    return points[~own]
++
++
++@dataclass
++class Corridor:
++    lateral: float = 0.0
++    heading: float = 0.0
++    confidence: float = 0.0
++    target_y: float = 0.0
++    width: float = math.nan
++
++
++def _robust_wall(points, side):
++    """Fit one nearby wall line y=a*x+b with deterministic consensus."""
++    if points is None or not len(points):
++        return None
++    points = _external_points(points)
++    x, y = points[:, 0], points[:, 1]
++    sign = 1. if side > 0 else -1.
++    mask = ((x > -.08) & (x < .72)
++            & (sign*y > .17) & (sign*y < .75))
++    sample = points[mask]
++    if len(sample) < 5:
++        return None
++    if len(sample) > 48:
++        order = np.argsort(sample[:, 0])
++        sample = sample[order[np.linspace(0, len(order)-1, 48).astype(int)]]
++    sx, sy = sample[:, 0], sample[:, 1]
++    best = None
++    n = len(sample)
++    for i in range(n-1):
++        for j in range(i+1, n):
++            dx = sx[j]-sx[i]
++            if abs(dx) < .10:
++                continue
++            a = (sy[j]-sy[i])/dx
++            if abs(a) > 2.5:
++                continue
++            b = sy[i]-a*sx[i]
++            residual = np.abs(sy-(a*sx+b))
++            keep = residual < .035
++            count = int(np.count_nonzero(keep))
++            if count < 5:
++                continue
++            span = float(np.ptp(sx[keep]))
++            if span < .18:
++                continue
++            median = float(np.median(residual[keep]))
++            score = count + 2.0*span - 8.0*median
++            if best is None or score > best[0]:
++                best = (score, keep)
++    if best is None:
++        return None
++    keep = best[1]
++    a, b = np.polyfit(sx[keep], sy[keep], 1)
++    residual = float(np.median(np.abs(sy[keep]-(a*sx[keep]+b))))
++    span = float(np.ptp(sx[keep]))
++    return float(a), float(b), int(np.count_nonzero(keep)), span, residual
++
++
++def corridor_lane(points, previous_width=math.nan):
++    """Estimate a local corridor centre from LiDAR side walls.
++
++    No world coordinate, tunnel radius, or route location is used.  Confidence
++    appears only when the scan itself contains sustained wall-like support.
++    """
++    if points is None:
++        return Corridor()
++    left, right = _robust_wall(points, 1), _robust_wall(points, -1)
++    forward_near, forward_far = .30, .45
++
++    def y_at(line, x):
++        return line[0]*x + line[1]
++
++    if left is not None and right is not None:
++        yl0, yr0 = y_at(left, forward_near), y_at(right, forward_near)
++        yl1, yr1 = y_at(left, forward_far), y_at(right, forward_far)
++        width0, width1 = yl0-yr0, yl1-yr1
++        if not (.45 <= width0 <= 1.05 and .42 <= width1 <= 1.08):
++            return Corridor()
++        angle_l, angle_r = math.atan(left[0]), math.atan(right[0])
++        disagreement = abs(math.atan2(math.sin(angle_l-angle_r),
++                                      math.cos(angle_l-angle_r)))
++        if disagreement > .55:
++            return Corridor()
++        lateral = .5*(yl0+yr0)
++        target = .5*(yl1+yr1)
++        heading = math.atan(.5*(left[0]+right[0]))
++        support = min(1., (left[2]+righ

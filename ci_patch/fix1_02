@@ -1,0 +1,103 @@
+lope
++        near = alpha*raw_near + (1.-alpha)*self.last_center
++        near = float(np.clip(near, -.09, .09))
++        slope = float(np.clip(slope, -1.8, 1.8))
++        target = near + slope*(.45-.30)
++
++        if confidence >= .30:
++            self.last_center = near
++            self.last_slope = slope
++            self.last_lane_confidence = confidence
++        else:
++            self.last_lane_confidence *= .7
++        return Lane(near, math.atan(slope), confidence, float(target), overlay), mask
+ 
+     def signs(self, image):
+         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+--- a/src/crc_solution/crc_solution/freshness.py
++++ b/src/crc_solution/crc_solution/freshness.py
+@@ -20,7 +20,13 @@
+         self.received.clear()
+         self.stamps.clear()
+ 
+-    def fresh(self, now, wall, timeout):
+-        return all(wall-self.received.get(k, -math.inf) < timeout
++    def age(self, name, now, wall):
++        return (now-self.stamps.get(name, -math.inf),
++                wall-self.received.get(name, -math.inf))
++
++    def fresh(self, now, wall, timeout, names=('image','scan','odom'),
++              receipt_timeout=None):
++        receipt_timeout = timeout if receipt_timeout is None else receipt_timeout
++        return all(wall-self.received.get(k, -math.inf) < receipt_timeout
+                    and -.2 <= now-self.stamps.get(k, -math.inf) < timeout
+-                   for k in ('image', 'scan', 'odom'))
++                   for k in names)
+--- a/src/crc_solution/crc_solution/sign_actions.py
++++ b/src/crc_solution/crc_solution/sign_actions.py
+@@ -9,6 +9,7 @@
+         self.handled={}
+         self.caution_until=-math.inf
+         self.highway=False
++        self.tunnel_until=-math.inf
+         self.label='unknown'
+         self.last_time=-math.inf
+ 
+@@ -42,10 +43,19 @@
+                 # Odometric extent measured from the observed sign, never a
+                 # location on the supplied map. Further signs can extend it.
+                 self.caution_until=max(self.caution_until,distance+2.5)
++                if label == 'tunnel':
++                    # Keep LiDAR corridor assistance armed long enough to cover
++                    # a generic tunnel.  It only influences steering when real
++                    # side-wall support is present, so an intentionally generous
++                    # relative window does not encode a route position.
++                    self.tunnel_until=max(self.tunnel_until,distance+6.0)
+             elif label=='hw_entry':
+                 self.highway=True
+             elif label=='hw_exit':
+                 self.highway=False
+ 
++    def tunnel_active(self, distance):
++        return distance < self.tunnel_until
++
+     def speed_cap(self, distance):
+         return .10 if distance < self.caution_until else math.inf
+--- a/src/crc_solution/crc_solution/node.py
++++ b/src/crc_solution/crc_solution/node.py
+@@ -22,7 +22,8 @@
+ from .control import Controller, Settings, PARAMETER_LIMITS
+ from .perception import Perception, Lane, Signs, fuse_printed_signs
+ from .navigation import (scan_points, choose_curvature, steering_curvature,
+-                         lane_obstacle_distance, swept_clearance, corner_pivot)
++                         lane_obstacle_distance, swept_clearance, corner_pivot,
++                         CorridorTracker)
+ from .freshness import SensorFreshness
+ from .pedestrians import CrossingGuard, detect_people
+ from .sign_classifier import SignClassifier
+@@ -52,6 +53,8 @@
+         self.scan_points = None
+         self.scan_message = None
+         self.curvature = 0.
++        self.corridor_tracker = CorridorTracker()
++        self.corridor = self.corridor_tracker.last
+         self.crossing = CrossingGuard()
+         self.people = []
+         self.sign_classifier = SignClassifier()
+@@ -79,7 +82,9 @@
+         self.writer.writerow(['sim_time','wall_time','state','distance_odom_m','x_odom','y_odom',
+                               'speed_measured','command_v','command_w','lane_lateral_est_m',
+                               'lane_heading_est_rad','lane_confidence','front_m','light','stop',
+-                              'sign_label','people_count','path_curvature','overtake_state','pivot_turn'])
++                              'sign_label','people_count','path_curvature','overtake_state','pivot_turn',
++                              'corridor_confidence','corridor_heading','corridor_width',
++                              'image_fresh','safety_fresh','nav_source'])
+         # A wall timer keeps publishing zero if /clock stops or sensor flow dies.
+         self.timer = self.create_timer(.05, self.tick, clock=Clock(clock_type=ClockType.STEADY_TIME))
+         self.get_logger().info(f'Evidence: {self.output}')
+@@ -160,6 +165,8 @@
+                 self.perception = Perception()
+                 self.lane, self.signs = Lane(), Signs()
+                 self.scan_points = None
++                self.corridor_tracker = CorridorTracker()
++                self.corridor = self.corridor_tra

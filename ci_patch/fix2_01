@@ -1,0 +1,49 @@
+.distance)
++        if route_hint:
++            # Preserve the sensor-observed turn through a STOP-controlled
++            # junction. Cross-road paint may otherwise flip the lane fit and
++            # steer directly into the sign pole. The local LiDAR planner still
++            # chooses the collision-free curvature around nearby hardware.
++            sign = 1. if route_hint > 0. else -1.
++            floor = sign*max(.75, min(1.65, .82*abs(route_hint)))
++            if desired_curvature*sign < .35:
++                desired_curvature = floor
++            else:
++                desired_curvature = .70*desired_curvature + .30*route_hint
++        tunnel_local = (tunnel_assist and safety_fresh
++                        and corridor_enclosed(self.scan_points))
+         overtake = self.overtake.update(
+             now, self.sign_actions.highway, self.scan_points, sweep_lane,
+             self.position, self.yaw, self.distance, desired_curvature)
+@@ -265,12 +279,20 @@
+                     self.scan_points, desired_curvature, self.curvature)
+         speed, turn = self.controller.step(
+             now, self.distance, self.yaw, self.speed, sweep_lane, self.front, safety_fresh,
+-            self.curvature, navigation_active=overtake.active)
++            self.curvature, navigation_active=(overtake.active or tunnel_local))
+         pivot_turn = 0.
+         if (not overtake.active and self.controller.state == 'OBSTACLE_WAIT'
+                 and not self.controller.stop_pending and not self.controller.light_wait):
++            pivot_lane = sweep_lane
++            if tunnel_local and pivot_lane.confidence < .45 and math.isfinite(self.curvature):
++                # Darkness may remove paint exactly at the apex.  Both side
++                # boundaries plus a collision-checked local curvature are
++                # enough to choose a pivot direction without a map location.
++                pivot_lane = Lane(
++                    target_y=float(np.clip(.5*self.curvature*.45**2, -.20, .20)),
++                    heading=float(math.atan(.45*self.curvature)), confidence=.55)
+             pivot_turn = corner_pivot(
+-                self.scan_points, sweep_lane, self.curvature, self.front,
++                self.scan_points, pivot_lane, self.curvature, self.front,
+                 self.settings.stop_distance)
+             if pivot_turn:
+                 speed, turn = 0., max(-self.settings.max_turn,
+@@ -286,6 +308,8 @@
+             turn *= .07/speed
+             speed = .07
+         cap=self.sign_actions.speed_cap(self.distance)
++        if route_hint:
++            cap=min(cap, .07)
+         if speed > cap:
+             turn *= cap/speed
+             speed = cap
