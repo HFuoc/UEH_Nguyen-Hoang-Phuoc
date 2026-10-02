@@ -3,7 +3,7 @@
 Gói nộp mới: `UEH_Nguyen-Hoang-Phuoc_submission.zip` (kèm `.sha256`). Báo cáo tiếng Anh 15 trang: `REPORT.pdf`; bản Word: `REPORT.docx`. Video mô phỏng: `SIMULATION_DEMO.mp4`, gần 5 phút, 30 fps. Lượt quay đạt 22,00 m odometry; chưa xác minh hoàn thành full map. Gói ZIP đã loại các tệp thử nghiệm và công cụ máy ảo.
 
 Mã nguồn Windows: `D:\simulation`. Bản chạy Ubuntu: `/home/fish/crc_ws`.
-Repository private: https://github.com/HFuoc/UEH_Nguyen-Hoang-Phuoc
+Repository public: https://github.com/HFuoc/UEH_Nguyen-Hoang-Phuoc
 
 ## Xem mô phỏng
 
@@ -56,7 +56,7 @@ Thay đổi bằng `ros2 param set` chỉ giữ trong lần chạy hiện tại.
 
 1. Đọc `REPORT.pdf`, kiểm tra kết quả và hoàn thiện khai báo phần bạn tự sửa/kiểm thử.
 2. Quay video 6 phút liền mạch bằng tiếng Anh, có mặt trong góc, theo `VIDEO.md`; điền liên kết xem được vào file đó.
-3. Xác nhận BTC còn nhận bài, cung cấp tài khoản giám khảo để thêm quyền truy cập repository private.
+3. Xác nhận BTC còn nhận bài. Repo hiện public theo yêu cầu; hướng dẫn thi yêu cầu private và cấp quyền cho giám khảo khi nộp.
 4. Nộp liên kết theo biểu mẫu của BTC. Chưa có thao tác tự gửi bài hoặc mời giám khảo trong phiên này.
 
 Đây là bản cơ sở có kiểm thử, chưa hoàn thành cả đường và chưa có vượt xe. Xem `PROGRESS.md` để biết giới hạn và kết quả mới nhất.

@@ -6,7 +6,7 @@
 **Institute:** Institute of Intelligent & Interactive Technologies  
 **Student ID:** 31231021201
 
-**Private repository:** [UEH_Nguyen-Hoang-Phuoc](https://github.com/HFuoc/UEH_Nguyen-Hoang-Phuoc)
+**Repository:** [UEH_Nguyen-Hoang-Phuoc](https://github.com/HFuoc/UEH_Nguyen-Hoang-Phuoc)
 
 The `crc_solution` ROS 2 package uses camera images, camera calibration, LiDAR and wheel odometry to follow the lane and handle traffic controls. One node publishes `/cmd_vel`.
 
